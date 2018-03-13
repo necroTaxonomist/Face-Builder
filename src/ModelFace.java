@@ -44,9 +44,20 @@ public class ModelFace
     private ModelBezier[] fhead;
     
     // JAW
+    private final static int JAW_RES = 15;
+    
     private PropGroup jawProp;
     private ModelParab chin;
     private ModelParab neckline;
+    private ModelParab chinMedian;
+    
+    private Binder neckZeuth;
+    private Binder midNeckZeuth;
+    private Binder midChinLength;
+    private Binder midChinHeight;
+    private Binder neckFatness;
+    
+    private ModelBezier[] chinNeck;
     
     // FUNCS
     
@@ -80,7 +91,7 @@ public class ModelFace
             mp.add(eyes[i]);
         }
         
-        eyeCorner = new Binder(eyesProp.valueProperty("Spacing").add(eyesProp.valueProperty("Size")));
+        eyeCorner = new SumBinder(eyesProp.valueProperty("Spacing"), eyesProp.valueProperty("Size"));
         eyeCornerAngle = new ConvertBinder(eyeCorner.valueProperty(), eyesProp.valueProperty("Depth"));
     }
     
@@ -147,8 +158,19 @@ public class ModelFace
         jawProp.add("Neckline Width", NECK_W-.2, NECK_W+.2);
         jawProp.add("Neckline Length", NECK_L-.1, NECK_L+.2, NECK_L);
         jawProp.add("Neckline Height", NECK_ANGLE-.2 + Math.PI/2, NECK_ANGLE+.2 + Math.PI/2);
+        jawProp.add("Neckline Zeuth", -.10, 0);
         
-        chin = new ModelParab(15,
+        jawProp.add("Neck Fatness", -.1, .05);
+        
+        neckZeuth = new SumBinder(jawProp.valueProperty("Jaw Height"), jawProp.valueProperty("Neckline Zeuth"));
+        midNeckZeuth = new MeanBinder(jawProp.valueProperty("Jaw Height"), neckZeuth.valueProperty());
+        
+        midChinLength = new MeanBinder(jawProp.valueProperty("Chin Length"), jawProp.valueProperty("Neckline Length"));
+        midChinHeight = new MeanBinder(jawProp.valueProperty("Chin Height"), jawProp.valueProperty("Neckline Height"));
+        
+        neckFatness = new SumBinder(midChinLength.valueProperty(), jawProp.valueProperty("Neck Fatness"));
+        
+        chin = new ModelParab(JAW_RES,
                               ZERO_PROP,
                               jawProp.valueProperty("Jaw Height"),
                               ZERO_PROP,
@@ -158,14 +180,24 @@ public class ModelFace
         chin.setPropGroup(jawProp);
         mp.add(chin);
         
-        neckline = new ModelParab(15,
+        neckline = new ModelParab(JAW_RES,
                                   ZERO_PROP,
-                                  jawProp.valueProperty("Jaw Height"),
+                                  neckZeuth.valueProperty(),
                                   ZERO_PROP,
                                   jawProp.valueProperty("Neckline Width"),
                                   jawProp.valueProperty("Neckline Length"),
                                   jawProp.valueProperty("Neckline Height"));
         neckline.setPropGroup(jawProp);
         mp.add(neckline);
+        
+        chinMedian = new ModelParab(JAW_RES,
+                                    ZERO_PROP,
+                                    midNeckZeuth.valueProperty(),
+                                    ZERO_PROP,
+                                    jawProp.valueProperty("Jaw Width"),
+                                    neckFatness.valueProperty(),
+                                    midChinHeight.valueProperty());
+        chinMedian.setPropGroup(jawProp);
+        mp.add(chinMedian);
     }
 }
