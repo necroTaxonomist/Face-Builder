@@ -1,4 +1,4 @@
-import java.util.ArrayList;
+import java.util.HashMap;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -31,41 +31,13 @@ public class ModelParab extends Group implements ModelShape
                       double w, double h,
                       double _rot)
     {
-        center = new Coord(x, y, z);
-        center.setChangeCallback(
-                () ->
-                {
-                    updateTl();
-                    update();
-                }
-            );
-        
-        wh = new Coord(w, h);
-        wh.setChangeCallback(
-                () ->
-                {
-                    update();
-                }
-            );
-        
-        rot = new SimpleDoubleProperty(_rot);
-        rot.addListener(
-                (o, oldVal, newVal) ->
-                {
-                    updateRot();
-                    update();
-                }
-            );
-        
-        res = _res;
-        lines = new Line[res - 1];
-        dots = new Circle[3];
-        
-        updateTl();
-        updateRot();
-        tfMatrix = Matrix.ident(4);
-        
-        initShape();
+        this(_res,
+             new SimpleDoubleProperty(x),
+             new SimpleDoubleProperty(y),
+             new SimpleDoubleProperty(z),
+             new SimpleDoubleProperty(w),
+             new SimpleDoubleProperty(h),
+             new SimpleDoubleProperty(_rot));
     }
     
     public ModelParab(int _res,
@@ -145,19 +117,27 @@ public class ModelParab extends Group implements ModelShape
         
         double[][] vert = new double[4][res];
         
+        double theta = 0;
         for (int c = 0; c < res; ++c)
         {
-            vert[0][c] = w * ((double)c/(res-1) - .5);
+            theta = ((double)c / (res - 1)) * Math.PI;
             
+            vert[0][c] = xOfTheta(theta);
             vert[1][c] = yOfX(vert[0][c]);
-            
             vert[2][c] = 0;
-            
             vert[3][c] = 1;
         }
         
         vert = Matrix.mult(rotMatrix, vert);
         vert = Matrix.mult(tlMatrix, vert);
+        
+        for (int c = 0; c < res; ++c)
+        {
+            double x = vert[0][c];
+            double y = vert[1][c];
+            double z = vert[2][c];
+        }
+        
         vert = Matrix.mult(tfMatrix, vert);
         
         // set lines
@@ -225,15 +205,19 @@ public class ModelParab extends Group implements ModelShape
         else if (theta == Math.PI)
             return -w / 2;
         
-        double A = -4 * h / (w * w);
+        double A = -4 * h / (w * w) * Math.cos(rot.getValue());
         double B = w / 2;
         
-        double disc = Math.pow(Math.tan(theta), 2) + Math.pow(2*A*B, 2);
+        double a = A;
+        double b = -Math.tan(theta);
+        double c = -A * B * B;
         
-        double x1 = (Math.tan(theta) + Math.sqrt(disc)) / (2*A);
-        double x2 = (Math.tan(theta) - Math.sqrt(disc)) / (2*A);
+        double disc = b*b - 4*a*c;
         
-        return (theta > Math.PI / 2 != x1 > 0) ? x1 : x2;
+        double x1 = (-b - Math.sqrt(disc)) / (2*a);
+        double x2 = (-b + Math.sqrt(disc)) / (2*a);
+        
+        return (theta < Math.PI / 2) ? -x1 : -x2;
     }
     
     private double yOfX(double x)
