@@ -199,5 +199,8 @@ public class ModelFace
                                     midChinHeight.valueProperty());
         chinMedian.setPropGroup(jawProp);
         mp.add(chinMedian);
+        
+        jawProp.add("TEST", 0, Math.PI);
+        chin.getRProp(jawProp.valueProperty("TEST"));
     }
 }

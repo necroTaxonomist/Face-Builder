@@ -195,6 +195,11 @@ public final class Matrix
         return colMat;
     }
     
+    static double[][] makeColVec(double ... vec)
+    {
+        return columnize(vec);
+    }
+    
     static double[] vectorize(double[][] mat)
     throws ArithmeticException
     {
@@ -291,16 +296,5 @@ public final class Matrix
                 sop(", ");
         }
         sop(">\n");
-    }
-    
-    public static void testConcat()
-    {
-        //ModelBezier mb = new ModelBezier(5);
-        
-        //mb.addPoint(new Coord(1,2,3));
-        //mb.addPoint(new Coord(4,5,6));
-        //mb.addPoint(new Coord(7,8,9));
-        
-        //mb.update();
     }
 }

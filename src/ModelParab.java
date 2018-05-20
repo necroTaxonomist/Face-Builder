@@ -26,6 +26,8 @@ public class ModelParab extends Group implements ModelShape
     
     private PropGroup pg;
     
+    private HashMap<DoubleProperty, DoubleProperty> recordedR;
+    
     public ModelParab(int _res,
                       double x, double y, double z,
                       double w, double h,
@@ -80,6 +82,8 @@ public class ModelParab extends Group implements ModelShape
         tfMatrix = Matrix.ident(4);
         
         initShape();
+        
+        recordedR = new HashMap<DoubleProperty, DoubleProperty>();
     }
     
     private void initShape()
@@ -241,5 +245,51 @@ public class ModelParab extends Group implements ModelShape
     public void setPropGroup(PropGroup _pg)
     {
         pg = _pg;
+    }
+    
+    public DoubleProperty getRProp(DoubleProperty theta)
+    {
+        DoubleProperty rProp = recordedR.getOrDefault(theta, null);
+        if (rProp == null)
+        {
+            rProp = recordR(theta);
+        }
+        
+        return rProp;
+    }
+    
+    private DoubleProperty recordR(DoubleProperty theta)
+    {
+        DoubleProperty rProp = new SimpleDoubleProperty(0);
+        theta.addListener(
+            (o, oldVal, newVal) ->
+            {
+                updateR((DoubleProperty)o);
+            }
+        );
+        
+        recordedR.put(theta, rProp);
+        updateR(theta);
+        
+        return rProp;
+    }
+    
+    private void updateR(DoubleProperty theta)
+    {
+        double x = xOfTheta(theta.getValue());
+        double y = yOfX(x);
+        
+        double[][] vert = Matrix.makeColVec(x, y, 0, 1);
+        
+        vert = Matrix.mult(rotMatrix, vert);
+        vert = Matrix.mult(tlMatrix, vert);
+        
+        double[] cVert = Matrix.rectToCyl(Matrix.vectorize(vert));
+        
+        DoubleProperty rProp = recordedR.getOrDefault(theta, null);
+        if (rProp != null)
+            rProp.setValue(cVert[0]);
+        
+        System.out.println("r=" + cVert[0]);
     }
 }
