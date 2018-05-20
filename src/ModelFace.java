@@ -6,6 +6,7 @@ import javafx.scene.Group;
 public class ModelFace
 {
     private static final DoubleProperty ZERO_PROP = new SimpleDoubleProperty(0);
+    private static final DoubleProperty HALF_ANGLE_PROP = new SimpleDoubleProperty(Math.PI/2);
     
     // BASE MEASUREMENTS
     private static final double HEAD_TOP_Y = 1;
@@ -198,28 +199,58 @@ public class ModelFace
                                     neckFatness.valueProperty(),
                                     midChinHeight.valueProperty());
         chinMedian.setPropGroup(jawProp);
+        chinMedian.hideLines();
         mp.add(chinMedian);
         
         jawProp.add("TEST", -Math.PI/2, Math.PI/2);
         chin.getRProp(jawProp.valueProperty("TEST"));
         
-        chinNeck = new ModelBezier[1];
-        chinNeck[0] = new ModelBezier(7);
+        int cnSize = 5;
+        int cnCenter = cnSize / 2;
+        chinNeck = new ModelBezier[cnSize];
         
-        chinNeck[0].addPoint(new CylCoord(chin.getRProp(jawProp.valueProperty("TEST")),
-                                          jawProp.valueProperty("TEST"),
-                                          chin.getZProp(jawProp.valueProperty("TEST"))
+        for (int i = 0; i < cnSize; ++i)
+        {
+            chinNeck[i] = new ModelBezier(7, false);
+            
+            DoubleProperty angle = null;
+            
+            if (i == cnCenter)
+            {
+                angle = ZERO_PROP;
+            }
+            else if (i == cnCenter - 1 || i == cnCenter + 1)
+            {
+                angle = eyeCornerAngle.getTheta();
+            }
+            else if (i == cnCenter - 2 || i == cnCenter + 2)
+            {
+                angle = HALF_ANGLE_PROP;
+            }
+            
+            // do things
+            
+            chinNeck[i].addPoint(new CylCoord(chin.getRProp(angle),
+                                          angle,
+                                          chin.getZProp(angle)
                                           ));
+            
+            chinNeck[i].addPoint(new CylCoord(chinMedian.getRProp(angle),
+                                          angle,
+                                          chinMedian.getZProp(angle)
+                                          ));
+            
+            chinNeck[i].addPoint(new CylCoord(neckline.getRProp(angle),
+                                          angle,
+                                          neckline.getZProp(angle)
+                                          ));
+            
+            if (i < cnCenter)
+                chinNeck[i].flip();
+            
+            mp.add(chinNeck[i]);
+        }
         
-        chinNeck[0].addPoint(new CylCoord(chinMedian.getRProp(jawProp.valueProperty("TEST")),
-                                          jawProp.valueProperty("TEST"),
-                                          chinMedian.getZProp(jawProp.valueProperty("TEST"))
-                                          ));
         
-        chinNeck[0].addPoint(new CylCoord(neckline.getRProp(jawProp.valueProperty("TEST")),
-                                          jawProp.valueProperty("TEST"),
-                                          neckline.getZProp(jawProp.valueProperty("TEST"))
-                                          ));
-        mp.add(chinNeck[0]);
     }
 }

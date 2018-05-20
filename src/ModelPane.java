@@ -152,7 +152,7 @@ public class ModelPane extends Pane
         add(zAxis);
         
         ModelLine testAxis = new ModelLine(-axisSize, 0, -axisSize, axisSize, 0, axisSize);
-        testAxis.setColor(Color.RED);
+        testAxis.setColor(Color.YELLOW);
         add(testAxis);
     }
 }

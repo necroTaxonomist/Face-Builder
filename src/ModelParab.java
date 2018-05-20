@@ -1,4 +1,5 @@
 import java.util.HashMap;
+import java.util.Map;
 
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
@@ -114,8 +115,21 @@ public class ModelParab extends Group implements ModelShape
         }
     }
     
+    public void hideLines()
+    {
+        for (int i = 0; i < res - 1; ++i)
+        {
+            getChildren().remove(lines[i]);
+        }
+    }
+    
     public void update()
     {
+        for (Map.Entry entry : recordedR.entrySet())
+        {
+            updateRZ((DoubleProperty)entry.getKey());
+        }
+        
         // get points
         double[] whVal = wh.getValue();
         double w = whVal[0];
@@ -318,8 +332,5 @@ public class ModelParab extends Group implements ModelShape
         DoubleProperty zProp = recordedZ.getOrDefault(theta, null);
         if (zProp != null)
             zProp.setValue(cVert[2]);
-        
-        System.out.println("r=" + cVert[0]);
-        System.out.println("z=" + cVert[2]);
     }
 }

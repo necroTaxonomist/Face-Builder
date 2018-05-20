@@ -22,7 +22,14 @@ public class ModelBezier extends Group implements ModelShape
     
     private PropGroup pg;
     
+    private boolean showDots;
+    
     public ModelBezier(int _res)
+    {
+        this(_res, true);
+    }
+    
+    public ModelBezier(int _res, boolean _showDots)
     {
         points = new ArrayList<Coord>();
         dots = new ArrayList<Circle>();
@@ -31,6 +38,8 @@ public class ModelBezier extends Group implements ModelShape
         lines = new Line[res - 1];
         
         tfMatrix = Matrix.ident(4);
+        
+        showDots = _showDots;
         
         initShape();
     }
@@ -91,12 +100,15 @@ public class ModelBezier extends Group implements ModelShape
         
         // draw control points as dots
         
-        control = Matrix.mult(tfMatrix, control);
-        
-        for (int i = 0; i < dots.size(); ++i)
+        if (showDots)
         {
-            dots.get(i).setCenterX(control[0][i]);
-            dots.get(i).setCenterY(control[1][i]);
+            control = Matrix.mult(tfMatrix, control);
+            
+            for (int i = 0; i < dots.size(); ++i)
+            {
+                dots.get(i).setCenterX(control[0][i]);
+                dots.get(i).setCenterY(control[1][i]);
+            }
         }
     }
     
@@ -121,20 +133,23 @@ public class ModelBezier extends Group implements ModelShape
                 }
             );
         
-        Circle newDot = new Circle(DOT_SIZE);
-        newDot.setFill(Color.BLACK);
-        
-        newDot.addEventHandler(MouseEvent.MOUSE_PRESSED,
-                (MouseEvent me) -> 
-                {
-                    System.out.println("bezr");
-                    if (pg != null)
-                        Face.setShownPropGroup(pg);
-                }
-            );
-        
-        dots.add(newDot);
-        getChildren().add(newDot);
+        if (showDots)
+        {
+            Circle newDot = new Circle(DOT_SIZE);
+            newDot.setFill(Color.BLACK);
+            
+            newDot.addEventHandler(MouseEvent.MOUSE_PRESSED,
+                    (MouseEvent me) -> 
+                    {
+                        System.out.println("bezr");
+                        if (pg != null)
+                            Face.setShownPropGroup(pg);
+                    }
+                );
+            
+            dots.add(newDot);
+            getChildren().add(newDot);
+        }
     }
     
     private double[] getValue(int n)
