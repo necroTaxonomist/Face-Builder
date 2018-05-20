@@ -200,7 +200,26 @@ public class ModelFace
         chinMedian.setPropGroup(jawProp);
         mp.add(chinMedian);
         
-        jawProp.add("TEST", 0, Math.PI);
+        jawProp.add("TEST", -Math.PI/2, Math.PI/2);
         chin.getRProp(jawProp.valueProperty("TEST"));
+        
+        chinNeck = new ModelBezier[1];
+        chinNeck[0] = new ModelBezier(7);
+        
+        chinNeck[0].addPoint(new CylCoord(chin.getRProp(jawProp.valueProperty("TEST")),
+                                          jawProp.valueProperty("TEST"),
+                                          chin.getZProp(jawProp.valueProperty("TEST"))
+                                          ));
+        
+        chinNeck[0].addPoint(new CylCoord(chinMedian.getRProp(jawProp.valueProperty("TEST")),
+                                          jawProp.valueProperty("TEST"),
+                                          chinMedian.getZProp(jawProp.valueProperty("TEST"))
+                                          ));
+        
+        chinNeck[0].addPoint(new CylCoord(neckline.getRProp(jawProp.valueProperty("TEST")),
+                                          jawProp.valueProperty("TEST"),
+                                          neckline.getZProp(jawProp.valueProperty("TEST"))
+                                          ));
+        mp.add(chinNeck[0]);
     }
 }

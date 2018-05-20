@@ -27,6 +27,7 @@ public class ModelParab extends Group implements ModelShape
     private PropGroup pg;
     
     private HashMap<DoubleProperty, DoubleProperty> recordedR;
+    private HashMap<DoubleProperty, DoubleProperty> recordedZ;
     
     public ModelParab(int _res,
                       double x, double y, double z,
@@ -84,6 +85,7 @@ public class ModelParab extends Group implements ModelShape
         initShape();
         
         recordedR = new HashMap<DoubleProperty, DoubleProperty>();
+        recordedZ = new HashMap<DoubleProperty, DoubleProperty>();
     }
     
     private void initShape()
@@ -209,7 +211,7 @@ public class ModelParab extends Group implements ModelShape
         else if (theta == Math.PI)
             return -w / 2;
         
-        double A = -4 * h / (w * w) * Math.cos(rot.getValue());
+        double A = -4 * h / (w * w) * Math.sin(rot.getValue());
         double B = w / 2;
         
         double a = A;
@@ -221,7 +223,7 @@ public class ModelParab extends Group implements ModelShape
         double x1 = (-b - Math.sqrt(disc)) / (2*a);
         double x2 = (-b + Math.sqrt(disc)) / (2*a);
         
-        return (theta < Math.PI / 2) ? -x1 : -x2;
+        return (theta < Math.PI / 2) ? x1 : x2;
     }
     
     private double yOfX(double x)
@@ -249,34 +251,57 @@ public class ModelParab extends Group implements ModelShape
     
     public DoubleProperty getRProp(DoubleProperty theta)
     {
-        DoubleProperty rProp = recordedR.getOrDefault(theta, null);
-        if (rProp == null)
+        DoubleProperty rProp;
+        
+        for (;;)
         {
-            rProp = recordR(theta);
+            rProp = recordedR.getOrDefault(theta, null);
+            if (rProp == null)
+                recordRZ(theta);
+            else
+                break;
         }
         
         return rProp;
     }
     
-    private DoubleProperty recordR(DoubleProperty theta)
+    public DoubleProperty getZProp(DoubleProperty theta)
+    {
+        DoubleProperty zProp;
+        
+        for (;;)
+        {
+            zProp = recordedZ.getOrDefault(theta, null);
+            if (zProp == null)
+                recordRZ(theta);
+            else
+                break;
+        }
+        
+        return zProp;
+    }
+    
+    private void recordRZ(DoubleProperty theta)
     {
         DoubleProperty rProp = new SimpleDoubleProperty(0);
+        DoubleProperty zProp = new SimpleDoubleProperty(0);
+        
         theta.addListener(
             (o, oldVal, newVal) ->
             {
-                updateR((DoubleProperty)o);
+                updateRZ((DoubleProperty)o);
             }
         );
         
         recordedR.put(theta, rProp);
-        updateR(theta);
+        recordedZ.put(theta, zProp);
         
-        return rProp;
+        updateRZ(theta);
     }
     
-    private void updateR(DoubleProperty theta)
+    private void updateRZ(DoubleProperty theta)
     {
-        double x = xOfTheta(theta.getValue());
+        double x = xOfTheta(Math.PI/2 - theta.getValue());
         double y = yOfX(x);
         
         double[][] vert = Matrix.makeColVec(x, y, 0, 1);
@@ -290,6 +315,11 @@ public class ModelParab extends Group implements ModelShape
         if (rProp != null)
             rProp.setValue(cVert[0]);
         
+        DoubleProperty zProp = recordedZ.getOrDefault(theta, null);
+        if (zProp != null)
+            zProp.setValue(cVert[2]);
+        
         System.out.println("r=" + cVert[0]);
+        System.out.println("z=" + cVert[2]);
     }
 }

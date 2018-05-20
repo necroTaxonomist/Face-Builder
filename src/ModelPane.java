@@ -150,5 +150,9 @@ public class ModelPane extends Pane
         ModelLine zAxis = new ModelLine(0, 0, -axisSize, 0, 0, axisSize);
         zAxis.setColor(Color.BLUE);
         add(zAxis);
+        
+        ModelLine testAxis = new ModelLine(-axisSize, 0, -axisSize, axisSize, 0, axisSize);
+        testAxis.setColor(Color.RED);
+        add(testAxis);
     }
 }
