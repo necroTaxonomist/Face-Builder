@@ -29,12 +29,20 @@ public class ModelFace
     private static final double NECK_W = 0.9;
     private static final double NECK_L = .40;
     private static final double NECK_ANGLE = .9;
+    
+    private static final double CHEEK_H = -.3;
+    private static final double CHEEK_R = .8;
 
     // EYES
     private PropGroup eyesProp;
     private ModelSphere[] eyes;
+    private ConvertBinder eyeAngle;
     private Binder eyeCorner;
     private ConvertBinder eyeCornerAngle;
+    private Binder eyeInner;
+    private ConvertBinder eyeInnerAngle;
+    private OffsetBinder eyeBottom;
+    private ConvertBinder eyeBottomAngle;
     
     // BROW
     private PropGroup browProp;
@@ -60,6 +68,10 @@ public class ModelFace
     
     private ModelBezier[] chinNeck;
     
+    //  CHEEKS
+    private PropGroup cheeksProp;
+    private ModelBezier[] cheeks;
+    
     // FUNCS
     
     public ModelFace(ModelPane mp)
@@ -68,6 +80,7 @@ public class ModelFace
         initBrow(mp);
         //initForehead(mp);
         initJaw(mp);
+        initCheeks(mp);
         
         Face.setShownPropGroup(eyesProp);
     }
@@ -78,6 +91,7 @@ public class ModelFace
         eyesProp.add("Spacing", EYES_X-.1, EYES_X+.1, EYES_X);
         eyesProp.add("Depth", EYES_Z-.1, EYES_Z+.1, EYES_Z);
         eyesProp.add("Size", EYES_R-.05, EYES_R+.05, EYES_R);
+        eyesProp.add("Bottom", -Math.PI/2, -Math.PI/8, -Math.PI/4);
         
         eyes = new ModelSphere[2];
         for (int i = 0; i < 2; ++i)
@@ -92,8 +106,19 @@ public class ModelFace
             mp.add(eyes[i]);
         }
         
+        eyeAngle = new ConvertBinder(eyesProp.valueProperty("Spacing"), eyesProp.valueProperty("Depth"));
+        
         eyeCorner = new SumBinder(eyesProp.valueProperty("Spacing"), eyesProp.valueProperty("Size"));
         eyeCornerAngle = new ConvertBinder(eyeCorner.valueProperty(), eyesProp.valueProperty("Depth"));
+        
+        eyeInner = new DiffBinder(eyesProp.valueProperty("Spacing"), eyesProp.valueProperty("Size"));
+        eyeInnerAngle = new ConvertBinder(eyeInner.valueProperty(), eyesProp.valueProperty("Depth"));
+        
+        eyeBottom = new OffsetBinder(eyesProp.valueProperty("Depth"),
+                                     ZERO_PROP,
+                                     eyesProp.valueProperty("Size"),
+                                     eyesProp.valueProperty("Bottom"));
+        eyeBottomAngle = new ConvertBinder(eyesProp.valueProperty("Spacing"), eyeBottom.getX());
     }
     
     private void initBrow(ModelPane mp)
@@ -202,10 +227,7 @@ public class ModelFace
         chinMedian.hideLines();
         mp.add(chinMedian);
         
-        jawProp.add("TEST", -Math.PI/2, Math.PI/2);
-        chin.getRProp(jawProp.valueProperty("TEST"));
-        
-        int cnSize = 5;
+        int cnSize = 9;
         int cnCenter = cnSize / 2;
         chinNeck = new ModelBezier[cnSize];
         
@@ -221,14 +243,20 @@ public class ModelFace
             }
             else if (i == cnCenter - 1 || i == cnCenter + 1)
             {
-                angle = eyeCornerAngle.getTheta();
+                angle = eyeInnerAngle.getTheta();
             }
             else if (i == cnCenter - 2 || i == cnCenter + 2)
             {
+                angle = eyeBottomAngle.getTheta();
+            }
+            else if (i == cnCenter - 3 || i == cnCenter + 3)
+            {
+                angle = eyeCornerAngle.getTheta();
+            }
+            else if (i == cnCenter - 4 || i == cnCenter + 4)
+            {
                 angle = HALF_ANGLE_PROP;
             }
-            
-            // do things
             
             chinNeck[i].addPoint(new CylCoord(chin.getRProp(angle),
                                           angle,
@@ -250,7 +278,78 @@ public class ModelFace
             
             mp.add(chinNeck[i]);
         }
+    }
+    
+    private void initCheeks(ModelPane mp)
+    {
+        cheeksProp = new PropGroup("Cheeks");
         
+        cheeksProp.add("Cheek Height (Inner)", CHEEK_H-.1, CHEEK_H+.1);
+        cheeksProp.add("Cheek Depth (Inner)", CHEEK_R-.2, CHEEK_R+.2);
+        
+        cheeksProp.add("Cheek Height (Outer)", CHEEK_H, CHEEK_H+.2);
+        cheeksProp.add("Cheek Depth (Outer)", CHEEK_R-.1, CHEEK_R+.1);
+        
+        int cSize = 6;
+        int cCenter = cSize / 2;
+        cheeks = new ModelBezier[cSize];
+        
+        for (int i = 0; i < cSize; ++i)
+        {
+            cheeks[i] = new ModelBezier(14);
+            
+            DoubleProperty angle = null;
+            
+            if (i == cCenter - 1 || i == cCenter)
+            {
+                angle = eyeInnerAngle.getTheta();
+                
+                cheeks[i].addPoint(new Coord(eyeInner.valueProperty(),
+                                             ZERO_PROP,
+                                             eyesProp.valueProperty("Depth")
+                                             ));
+            }
+            else if (i == cCenter - 2 || i == cCenter + 1)
+            {
+                angle = eyeBottomAngle.getTheta();
+                
+                cheeks[i].addPoint(new Coord(eyesProp.valueProperty("Spacing"),
+                                             eyeBottom.getY(),
+                                             eyeBottom.getX()
+                                             ));
+                
+                cheeks[i].addPoint(new CylCoord(cheeksProp.valueProperty("Cheek Depth (Inner)"),
+                                                angle,
+                                                cheeksProp.valueProperty("Cheek Height (Inner)")
+                                                ));
+            }
+            else if (i == cCenter - 3 || i == cCenter + 2)
+            {
+                angle = eyeCornerAngle.getTheta();
+                
+                cheeks[i].addPoint(new Coord(eyeCorner.valueProperty(),
+                                             ZERO_PROP,
+                                             eyesProp.valueProperty("Depth")
+                                             ));
+                
+                cheeks[i].addPoint(new CylCoord(cheeksProp.valueProperty("Cheek Depth (Outer)"),
+                                                angle,
+                                                cheeksProp.valueProperty("Cheek Height (Outer)")
+                                                ));
+            }
+            
+            cheeks[i].addPoint(new CylCoord(chin.getRProp(angle),
+                                            angle,
+                                            chin.getZProp(angle)
+                                            ));
+            
+            if (i < cCenter)
+                cheeks[i].flip();
+            
+            mp.add(cheeks[i]);
+            
+            cheeks[i].setPropGroup(cheeksProp);
+        }
         
     }
 }

@@ -71,7 +71,7 @@ public class ModelSphere extends Group implements ModelShape
             }
         );
         
-        getChildren().add(outline);
+        //getChildren().add(outline);
         getChildren().add(centerDot);
         
         update();
