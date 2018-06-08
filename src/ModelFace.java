@@ -32,6 +32,18 @@ public class ModelFace
     
     private static final double CHEEK_H = -.3;
     private static final double CHEEK_R = .8;
+    
+    private static final double MOUTH_H = -.7;
+    private static final double MOUTH_D = .675;
+    private static final double BITE = .05;
+    
+    private static final double ULIP_L = .025;
+    private static final double ULIP_ANGLE = .25;
+    private static final double LLIP_L = .015;
+    
+    private static final double CHIN_IN = .2;
+    private static final double CHIN_OUT = .2;
+    private static final double CHIN_SIDE = .05;
 
     // EYES
     private PropGroup eyesProp;
@@ -68,9 +80,40 @@ public class ModelFace
     
     private ModelBezier[] chinNeck;
     
-    //  CHEEKS
+    // CHEEKS
     private PropGroup cheeksProp;
     private ModelBezier[] cheeks;
+    
+    // MOUTH
+    private PropGroup mouthProp;
+    private ModelParab mouth;
+    private ModelParab upperLip;
+    private ModelParab lowerLip;
+    
+    Binder ulipAdd;
+    Binder llipAdd;
+    
+    // CHIN
+    private PropGroup chinProp;
+    
+    private ModelBezier chinFront;
+    private ModelBezier[] chinSide;
+    
+    private Binder chinLipDist;
+    private Binder clDist1;
+    private Binder clDist2;
+    private Binder chinH1;
+    private Binder chinH2;
+    private Binder chinD1;
+    private Binder chinD2;
+    
+    private Binder halfMouthWidth;
+    private ConvertBinder mouthCornerAngle;
+    
+    private Binder clDistSide;
+    private Binder clDist3;
+    private Binder chinH3;
+    private Binder chinD3;
     
     // FUNCS
     
@@ -81,6 +124,8 @@ public class ModelFace
         //initForehead(mp);
         initJaw(mp);
         initCheeks(mp);
+        initMouth(mp);
+        initChin(mp);
         
         Face.setShownPropGroup(eyesProp);
     }
@@ -350,6 +395,130 @@ public class ModelFace
             
             cheeks[i].setPropGroup(cheeksProp);
         }
+    }
+    
+    private void initMouth(ModelPane mp)
+    {
+        mouthProp = new PropGroup("Mouth");
         
+        mouthProp.add("Mouth Height", MOUTH_H-.1, MOUTH_H+.1);
+        mouthProp.add("Mouth Width", EYES_X * 2 - .4, EYES_X * 2);
+        mouthProp.add("Mouth Depth", MOUTH_D-.1, MOUTH_D+.1);
+        mouthProp.add("Bite Size", 0, BITE+.1);
+        
+        mouthProp.add("Upper Lip Size",ULIP_L-.02, ULIP_L+.04);
+        mouthProp.add("Upper Lip Height",Math.PI/2-ULIP_ANGLE-.4, Math.PI/2-ULIP_ANGLE+.1);
+        
+        mouthProp.add("Lower Lip Size",LLIP_L-.02, LLIP_L+.04);
+        mouthProp.add("Lower Lip Height",Math.PI/2+ULIP_ANGLE-.1, Math.PI/2+ULIP_ANGLE+.4);
+        
+        mouth = new ModelParab(7,
+                               ZERO_PROP,
+                               mouthProp.valueProperty("Mouth Height"),
+                               mouthProp.valueProperty("Mouth Depth"),
+                               mouthProp.valueProperty("Mouth Width"),
+                               mouthProp.valueProperty("Bite Size"),
+                               HALF_ANGLE_PROP);
+        mp.add(mouth);
+        mouth.setPropGroup(mouthProp);
+        
+        ulipAdd = new SumBinder(mouthProp.valueProperty("Bite Size"), mouthProp.valueProperty("Upper Lip Size"));
+        
+        upperLip = new ModelParab(7,
+                                  ZERO_PROP,
+                                  mouthProp.valueProperty("Mouth Height"),
+                                  mouthProp.valueProperty("Mouth Depth"),
+                                  mouthProp.valueProperty("Mouth Width"),
+                                  ulipAdd.valueProperty(),
+                                  mouthProp.valueProperty("Upper Lip Height"));
+        mp.add(upperLip);
+        upperLip.setPropGroup(mouthProp);
+        
+        llipAdd = new SumBinder(mouthProp.valueProperty("Bite Size"), mouthProp.valueProperty("Lower Lip Size"));
+        
+        lowerLip = new ModelParab(7,
+                                  ZERO_PROP,
+                                  mouthProp.valueProperty("Mouth Height"),
+                                  mouthProp.valueProperty("Mouth Depth"),
+                                  mouthProp.valueProperty("Mouth Width"),
+                                  llipAdd.valueProperty(),
+                                  mouthProp.valueProperty("Lower Lip Height"));
+        mp.add(lowerLip);
+        lowerLip.setPropGroup(mouthProp);
+    }
+    
+    private void initChin(ModelPane mp)
+    {
+        chinProp = new PropGroup("Chin");
+        
+        chinProp.add("Outer Chin", 0, CHIN_OUT, .05);
+        chinProp.add("Inner Chin", 0, CHIN_IN, .05);
+        chinProp.add("Side Chin", 0, CHIN_SIDE);
+        
+        chinLipDist = new DiffBinder(lowerLip.getZProp(ZERO_PROP), chin.getZProp(ZERO_PROP));
+        
+        clDist1 = new Binder(chinLipDist.valueProperty().multiply(.33));
+        clDist2 = new Binder(chinLipDist.valueProperty().multiply(.67));
+        
+        chinH1 = new SumBinder(clDist1.valueProperty(), chin.getZProp(ZERO_PROP));
+        chinH2 = new SumBinder(clDist2.valueProperty(), chin.getZProp(ZERO_PROP));
+        
+        chinD1 = new SumBinder(lowerLip.getRProp(ZERO_PROP), chinProp.valueProperty("Outer Chin"));
+        chinD2 = new DiffBinder(lowerLip.getRProp(ZERO_PROP), chinProp.valueProperty("Inner Chin"));
+        
+        chinFront = new ModelBezier(7);
+        
+        chinFront.addPoint(new CylCoord(chin.getRProp(ZERO_PROP),
+                                        ZERO_PROP,
+                                        chin.getZProp(ZERO_PROP)));
+        chinFront.addPoint(new CylCoord(chinD1.valueProperty(),
+                                        ZERO_PROP,
+                                        chinH1.valueProperty()));
+        chinFront.addPoint(new CylCoord(chinD2.valueProperty(),
+                                        ZERO_PROP,
+                                        chinH2.valueProperty()));
+        chinFront.addPoint(new CylCoord(lowerLip.getRProp(ZERO_PROP),
+                                        ZERO_PROP,
+                                        lowerLip.getZProp(ZERO_PROP)));
+        
+        mp.add(chinFront);
+        chinFront.setPropGroup(chinProp);
+        
+        halfMouthWidth = new Binder(mouthProp.valueProperty("Mouth Width").multiply(.5));
+        mouthCornerAngle = new ConvertBinder(halfMouthWidth.valueProperty(),
+                                             mouthProp.valueProperty("Mouth Depth"));
+        
+        clDistSide = new DiffBinder(mouthProp.valueProperty("Mouth Height"),
+                                    chin.getZProp(mouthCornerAngle.getTheta()));
+        
+        clDist3 = new Binder(chinLipDist.valueProperty().multiply(.5));
+        
+        chinH3 = new SumBinder(clDist3.valueProperty(), chin.getZProp(mouthCornerAngle.getTheta()));
+        
+        chinD3 = new SumBinder(mouthCornerAngle.getR(),
+                               chinProp.valueProperty("Side Chin"));
+        
+        chinSide = new ModelBezier[2];
+        
+        for (int i = 0; i < 2; ++i)
+        {
+            chinSide[i] = new ModelBezier(7);
+            
+            chinSide[i].addPoint(new CylCoord(chin.getRProp(mouthCornerAngle.getTheta()),
+                                              mouthCornerAngle.getTheta(),
+                                              chin.getZProp(mouthCornerAngle.getTheta())));
+            chinSide[i].addPoint(new CylCoord(chinD3.valueProperty(),
+                                              mouthCornerAngle.getTheta(),
+                                              chinH3.valueProperty()));
+            chinSide[i].addPoint(new CylCoord(mouthCornerAngle.getR(),
+                                              mouthCornerAngle.getTheta(),
+                                              mouthProp.valueProperty("Mouth Height")));
+            
+            if (i < 1)
+                chinSide[i].flip();
+            
+            mp.add(chinSide[i]);
+            chinSide[i].setPropGroup(chinProp);
+        }
     }
 }
