@@ -134,6 +134,22 @@ public class ModelFace
     private Binder halfNoseWidth;
     private Binder noseLineCurve;
 
+    private Binder septumHeight1;
+    private Binder septumHeight2;
+    private Binder septumHeight3;
+    private Binder septumHeight4;
+
+    private Binder noseBottomFront;
+
+    private Binder noseLength;
+    private Binder noseLength25;
+    private Binder noseLength50;
+    private Binder noseLength75;
+
+    private Binder septumDepth2;
+    private Binder septumDepth3;
+    private Binder septumDepth4;
+
     // FUNCS
 
     public ModelFace(ModelPane mp)
@@ -561,6 +577,11 @@ public class ModelFace
         noseProp.add("Bridge Width", .02, .05);
         noseProp.add("Bridge Depth", EYES_Z, EYES_Z + .2);
 
+        noseProp.add("Septum Height 1", 0, .075);
+        noseProp.add("Septum Height 2", .0, .3);
+        noseProp.add("Septum Height 3", .1, .4);
+        noseProp.add("Septum Height 4", .2, .5);
+
         nose = new ModelParab(7,
                               ZERO_PROP,
                               noseProp.valueProperty("Nose Height"),
@@ -574,6 +595,9 @@ public class ModelFace
         noseLowest = new DiffBinder(noseProp.valueProperty("Nose Height"), noseProp.valueProperty("Nose Zeuth"));
         noseLowestFront = new SumBinder(noseProp.valueProperty("Nose Depth"), noseProp.valueProperty("Nose Forward"));
 
+        noseBottomFront = new DiffBinder(nose.getZProp(noseProp.valueProperty("Septum Width")),
+                                         noseProp.valueProperty("Septum Height 1"));
+
         noseBottom = new ModelBezier[2];
         for (int i = 0; i < 2; ++i)
         {
@@ -583,10 +607,13 @@ public class ModelFace
                                                 noseProp.valueProperty("Septum Width"),
                                                 nose.getZProp(noseProp.valueProperty("Septum Width"))));
 
+            noseBottom[i].addPoint(new CylCoord(nose.getRProp(noseProp.valueProperty("Septum Width")),
+                                                noseProp.valueProperty("Septum Width"),
+                                                noseBottomFront.valueProperty()));
+
             noseBottom[i].addPoint(new Coord(noseProp.valueProperty("Nostril Spacing"),
                                              noseLowest.valueProperty(),
                                              noseLowestFront.valueProperty()));
-
             if (i < 1)
                 noseBottom[i].flip();
             mp.add(noseBottom[i]);
@@ -618,6 +645,28 @@ public class ModelFace
             mp.add(noseLines[i]);
         }
 
+        septumHeight1 = new SumBinder(nose.getZProp(noseProp.valueProperty("Septum Width")),
+                                      noseProp.valueProperty("Septum Height 1"));
+        septumHeight2 = new SumBinder(nose.getZProp(noseProp.valueProperty("Septum Width")),
+                                      noseProp.valueProperty("Septum Height 2"));
+        septumHeight3 = new SumBinder(nose.getZProp(noseProp.valueProperty("Septum Width")),
+                                      noseProp.valueProperty("Septum Height 3"));
+        septumHeight4 = new SumBinder(nose.getZProp(noseProp.valueProperty("Septum Width")),
+                                      noseProp.valueProperty("Septum Height 4"));
+
+        noseLength = new DiffBinder(nose.getRProp(noseProp.valueProperty("Septum Width")),
+                                    noseProp.valueProperty("Bridge Depth"));
+        noseLength25 = new Binder(noseLength.valueProperty().multiply(.25));
+        noseLength50 = new Binder(noseLength.valueProperty().multiply(.50));
+        noseLength75 = new Binder(noseLength.valueProperty().multiply(.75));
+
+        septumDepth2 = new SumBinder(noseProp.valueProperty("Bridge Depth"),
+                                     noseLength75.valueProperty());
+        septumDepth3 = new SumBinder(noseProp.valueProperty("Bridge Depth"),
+                                     noseLength50.valueProperty());
+        septumDepth4 = new SumBinder(noseProp.valueProperty("Bridge Depth"),
+                                     noseLength25.valueProperty());
+
         septum = new ModelBezier[2];
         for (int i = 0; i < 2; ++i)
         {
@@ -626,6 +675,22 @@ public class ModelFace
             septum[i].addPoint(new CylCoord(nose.getRProp(noseProp.valueProperty("Septum Width")),
                                             noseProp.valueProperty("Septum Width"),
                                             nose.getZProp(noseProp.valueProperty("Septum Width"))));
+
+            septum[i].addPoint(new CylCoord(nose.getRProp(noseProp.valueProperty("Septum Width")),
+                                            noseProp.valueProperty("Septum Width"),
+                                            septumHeight1.valueProperty()));
+
+            septum[i].addPoint(new Coord(noseProp.valueProperty("Bridge Width"),
+                                         septumHeight2.valueProperty(),
+                                         septumDepth2.valueProperty()));
+
+            septum[i].addPoint(new Coord(noseProp.valueProperty("Bridge Width"),
+                                         septumHeight3.valueProperty(),
+                                         septumDepth3.valueProperty()));
+
+            septum[i].addPoint(new Coord(noseProp.valueProperty("Bridge Width"),
+                                         septumHeight4.valueProperty(),
+                                         septumDepth4.valueProperty()));
 
             septum[i].addPoint(new Coord(noseProp.valueProperty("Bridge Width"),
                                          ZERO_PROP,
