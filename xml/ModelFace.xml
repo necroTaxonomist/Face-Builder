@@ -58,7 +58,7 @@
         </bezier>
     </section>
     <section name="Jaw" pgroup="Jaw">
-        <parab res="15">
+        <parab res="15" name="Jaw">
             <center x="0" y="Jaw.Height" z="0" />
             <width>Jaw.Width</width>
             <length>Jaw.Length</length>
@@ -66,7 +66,7 @@
         </parab>
     </section>
     <section name="Neckline" pgroup="Neckline">
-        <parab res="15">
+        <parab res="15" name="Neckline">
             <center x="0" z="0">
                 <y>Jaw.Height + Neckline.Height</y>
             </center>
@@ -76,7 +76,7 @@
         </parab>
     </section>
     <section name="Neck" pgroup="Neck">
-        <parab res="15">
+        <parab res="15" name="Neck">
             <center x="0" z="0">
                 <y>Jaw.Height + Neckline.Height/2</y>
             </center>

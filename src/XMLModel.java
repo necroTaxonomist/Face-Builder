@@ -525,6 +525,7 @@ public class XMLModel
 
         DoubleProperty prop = null;
         char op = '+';
+        String unaryOp = null;
         boolean first = true;
 
         while (i[0] < str.length())
@@ -536,6 +537,7 @@ public class XMLModel
                 ++i[0];
 
             String found = str.substring(j, i[0]);
+            System.out.println("found=" + found);
 
             if (op == 0)
             {
@@ -551,6 +553,7 @@ public class XMLModel
                 double foundVal = 0;
                 boolean isConst = false;
                 boolean neg = false;
+                boolean isUnaryOp = false;
 
                 if ((op == '+' || op == '-') && !first)
                 {
@@ -560,98 +563,104 @@ public class XMLModel
                 }
                 else
                 {
-                    if (found.charAt(0) == '-')
+                    if (found.equals("-") ||
+                        found.equals("cos") ||
+                        found.equals("sin"))
                     {
-                        j = i[0];
-                        i[0] = skipUntil(str, j, WS_OR_OP);
-                        found = str.substring(j, i[0]);
-                        neg = true;
-                    }
-
-                    if (found.equals("PI"))
-                    {
-                        foundVal = Math.PI;
-                        isConst = true;
+                        unaryOp = found;
+                        isUnaryOp = true;
                     }
                     else
                     {
-                        try
+                        if (found.equals("PI"))
                         {
-                            foundVal = Double.parseDouble(found);
+                            foundVal = Math.PI;
                             isConst = true;
                         }
-                        catch (Exception e)
+                        else
                         {
+                            try
+                            {
+                                foundVal = Double.parseDouble(found);
+                                isConst = true;
+                            }
+                            catch (Exception e)
+                            {
+                            }
                         }
-                    }
 
-                    if (!isConst)
-                    {
-                        try
+                        if (!isConst)
                         {
-                            foundProp = resolveSingleProp(found, context);
-                            isConst = false;
+                            try
+                            {
+                                foundProp = resolveSingleProp(found, context);
+                                isConst = false;
+                            }
+                            catch (Exception e)
+                            {
+                                throw new BadValueException(str);
+                            }
                         }
-                        catch (Exception e)
+                        else
                         {
-                            throw new BadValueException(str);
+                            if (constProps.containsKey(foundVal))
+                                foundProp = constProps.get(foundVal);
+                            else
+                            {
+                                foundProp = new SimpleDoubleProperty(foundVal);
+                                constProps.put(foundVal, foundProp);
+                            }
                         }
                     }
                 }
 
-                if (isConst)
+                if (!isUnaryOp)
                 {
-                    if (neg)
-                        foundVal = -foundVal;
+                    if (unaryOp != null)
+                    {
+                        if (unaryOp.equals("-"))
+                        {
+                            Binder b = new Binder(foundProp.multiply(-1));
+                            binders.add(b);
+                            foundProp = b.valueProperty();
+                        }
+                        unaryOp = null;
+                    }
 
-                    if (constProps.containsKey(foundVal))
-                        foundProp = constProps.get(foundVal);
+                    if (op == '+' && first)
+                        prop = foundProp;
+                    else if (op == '+' && !first)
+                    {
+                        Binder b = new SumBinder(prop, foundProp);
+                        binders.add(b);
+                        prop = b.valueProperty();
+                    }
+                    else if (op == '-')
+                    {
+                        Binder b = new DiffBinder(prop, foundProp);
+                        binders.add(b);
+                        prop = b.valueProperty();
+                    }
+                    else if (op == '*' && isConst)
+                    {
+                        Binder b = new Binder(prop.multiply(foundVal));
+                        binders.add(b);
+                        prop = b.valueProperty();
+                    }
+                    else if (op == '/' && isConst)
+                    {
+                        Binder b = new Binder(prop.divide(foundVal));
+                        binders.add(b);
+                        prop = b.valueProperty();
+                    }
                     else
-                    {
-                        foundProp = new SimpleDoubleProperty(foundVal);
-                        constProps.put(foundVal, foundProp);
-                    }
-                }
-                else if (neg)
-                {
-                    Binder b = new Binder(foundProp.multiply(-1));
-                    binders.add(b);
-                    foundProp = b.valueProperty();
-                }
+                        throw new BadValueException(str);
 
-                if (op == '+' && first)
-                    prop = foundProp;
-                else if (op == '+' && !first)
-                {
-                    Binder b = new SumBinder(prop, foundProp);
-                    binders.add(b);
-                    prop = b.valueProperty();
-                }
-                else if (op == '-')
-                {
-                    Binder b = new DiffBinder(prop, foundProp);
-                    binders.add(b);
-                    prop = b.valueProperty();
-                }
-                else if (op == '*' && isConst)
-                {
-                    Binder b = new Binder(prop.multiply(foundVal));
-                    binders.add(b);
-                    prop = b.valueProperty();
-                }
-                else if (op == '/' && isConst)
-                {
-                    Binder b = new Binder(prop.divide(foundVal));
-                    binders.add(b);
-                    prop = b.valueProperty();
-                }
-                else
-                    throw new BadValueException(str);
+                    op = 0;
 
-                op = 0;
+                    first = false;
+                }
             }
-
-            first = false;
         }
 
         return prop;
