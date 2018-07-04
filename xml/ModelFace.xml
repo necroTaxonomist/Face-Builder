@@ -1,0 +1,45 @@
+<model name="Face">
+    <pgroup name="Eyes">
+        <prop name="Spacing" min=".2" max=".2 + .1*2" />
+        <prop name="Depth" min=".5" max=".7" />
+        <prop name="Size" min=".1" max=".2" />
+        <prop name="Bottom" min="-PI/2" max="-PI/8" default="-PI/4" />
+        <val name="Corner">
+            Spacing + Size
+        </val>
+        <angleval name="Corner_Angle">
+            <x>Corner</x>
+            <z>Depth</z>
+        </angleval>
+    </pgroup>
+    <pgroup name="Brow">
+        <prop name="Outer_Depth" min=".7" max=".9" />
+        <prop name="Outer_Depth" min=".1" max=".2" />
+    </pgroup>
+
+    <section name="Eyes" pgroup="Eyes">
+        <sphere reflect="both">
+            <center x="Eyes.Spacing" y="0" z="Eyes.Depth" />
+            <radius>Eyes.Size</radius>
+        </sphere>
+    </section>
+    <section name="Brow" pgroup="Brow">
+        <bezier res="7" reflect="both">
+            <point>
+                <x>Eyes.Corner</x>
+                <y>0</y>
+                <z>Eyes.Depth</z>
+            </point>
+            <point type="cyl">
+                <r>Brow.Outer_Depth</r>
+                <theta>Eyes.Corner_Angle.Theta</theta>
+                <z>Brow.Height / 2</z>
+            </point>
+            <point type="cyl">
+                <r>Brow.Outer_Depth</r>
+                <theta>Eyes.Corner_Angle.Theta</theta>
+                <z>Brow.Height</z>
+            </point>
+        </bezier>
+    </section>
+</model>

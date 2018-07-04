@@ -19,7 +19,7 @@ public class Face extends Application
 
     public static ModelPane model;
     public static RotatePane rot;
-    public static ModelFace face;
+    public static XMLModel face;
 
     private static Face mainFace;
 
@@ -47,7 +47,7 @@ public class Face extends Application
         model.setYaw(rot.getYaw());
         model.setPitch(rot.getPitch());
 
-        face = new ModelFace(model);
+        face = new XMLModel(model, "xml/ModelFace.xml");
 
         // add to main pane
         ((BorderPane)mainPane).setCenter(model);
