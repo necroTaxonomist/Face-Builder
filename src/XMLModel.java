@@ -12,6 +12,7 @@ public class XMLModel
     private ArrayList<Binder> binders;
     private ArrayList<ConvertBinder> angles;
     private HashMap<Double, DoubleProperty> constProps;
+    private HashMap<String, ModelParab> parabs;
 
     private ModelPane mp;
     private String firstGroup;
@@ -23,6 +24,7 @@ public class XMLModel
         binders = new ArrayList<Binder>();
         angles = new ArrayList<ConvertBinder>();
         constProps = new HashMap<Double, DoubleProperty>();
+        parabs = new HashMap<String, ModelParab>();
         mp = _mp;
         firstGroup = null;
     }
@@ -220,6 +222,10 @@ public class XMLModel
         if (reflect == null)
             reflect = "false";
 
+        String visible = xml.getAttribValueFromName("visible");
+        if (visible == null)
+            visible = "true";
+
         int l = (reflect.equals("both") || reflect.equals("true")) ? 0 : 1;
         int u = (reflect.equals("both") || reflect.equals("false")) ? 1 : 0;
 
@@ -240,7 +246,8 @@ public class XMLModel
                     ms.setPropGroup(pgroups.get(pgroup));
                 if (i == 0)
                     ms.flip();
-                mp.add(ms);
+                if (visible.equals("true"))
+                    mp.add(ms);
             }
         }
     }
@@ -330,6 +337,12 @@ public class XMLModel
         DoubleProperty a = loadSingleProp(angle, pgroup);
 
         ModelParab mp = new ModelParab(res, x, y, z, w, l, a);
+
+        if (xml.getAttribValueFromName("name") != null)
+        {
+            parabs.put(xml.getAttribValueFromName("name"), mp);
+        }
+
         return mp;
     }
 
@@ -565,7 +578,9 @@ public class XMLModel
                 {
                     if (found.equals("-") ||
                         found.equals("cos") ||
-                        found.equals("sin"))
+                        found.equals("sin") ||
+                        found.indexOf("ParabR:") == 0 ||
+                        found.indexOf("ParabZ:") == 0)
                     {
                         unaryOp = found;
                         isUnaryOp = true;
@@ -623,6 +638,23 @@ public class XMLModel
                             Binder b = new Binder(foundProp.multiply(-1));
                             binders.add(b);
                             foundProp = b.valueProperty();
+                        }
+                        else if (unaryOp.indexOf("Parab") == 0)
+                        {
+                            char get = unaryOp.charAt(5);
+                            String pname = unaryOp.substring(7);
+
+                            if (!parabs.containsKey(pname))
+                                throw new BadValueException(str);
+
+                            ModelParab mp = parabs.get(pname);
+
+                            if (get == 'R')
+                                foundProp = mp.getRProp(foundProp);
+                            else if (get == 'Z')
+                                foundProp = mp.getZProp(foundProp);
+                            else
+                                throw new BadValueException(str);
                         }
                         unaryOp = null;
                     }

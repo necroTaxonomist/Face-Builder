@@ -76,7 +76,7 @@
         </parab>
     </section>
     <section name="Neck" pgroup="Neck">
-        <parab res="15" name="Neck">
+        <parab res="15" name="Neck" visible="false">
             <center x="0" z="0">
                 <y>Jaw.Height + Neckline.Height/2</y>
             </center>
@@ -84,5 +84,22 @@
             <length>Jaw.Length/2 + Neckline.Length/2 + Neck.Fatness</length>
             <angle>Jaw.Angle/2 + Neckline.Angle/2</angle>
         </parab>
+        <bezier res="7">
+            <point type="cyl">
+                <r>ParabR:Jaw 0</r>
+                <theta>0</theta>
+                <z>ParabZ:Jaw 0</z>
+            </point>
+            <point type="cyl">
+                <r>ParabR:Neck 0</r>
+                <theta>0</theta>
+                <z>ParabZ:Neck 0</z>
+            </point>
+            <point type="cyl">
+                <r>ParabR:Neckline 0</r>
+                <theta>0</theta>
+                <z>ParabZ:Neckline 0</z>
+            </point>
+        </bezier>
     </section>
 </model>
