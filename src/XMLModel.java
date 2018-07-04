@@ -2,6 +2,7 @@ import xmlparse.XMLStruct;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 
@@ -51,7 +52,10 @@ public class XMLModel
 
     public void load(XMLStruct xml)
     {
-        String pgroup = null;
+        load(xml, null);
+    }
+    private void load(XMLStruct xml, String pgroup)
+    {
         if (xml.getName().equals("section"))
         {
             pgroup = xml.getAttribValueFromName("pgroup");
@@ -70,11 +74,121 @@ public class XMLModel
                 {
                     load(section);
                 }
+                else if (section.getName().equals("for"))
+                {
+                    loadFor(section, pgroup);
+                }
                 else
                 {
                     loadShape(section, pgroup);
                 }
             }
+        }
+    }
+
+    private void loadFor(XMLStruct xml, String pgroup)
+    {
+        XMLStruct range = xml.getChildElement("range");
+
+        ForRange fr = loadRange(range);
+
+        boolean empty = false;
+        while (!empty)
+        {
+            for (int i = 0; i < fr.numNames(); ++i)
+            {
+                String name = fr.getName(i);
+                String val = fr.pop(name);
+
+                if (val == null)
+                {
+                    empty = true;
+                    break;
+                }
+
+                try
+                {
+                    DoubleProperty dp = resolveProp(val, null);
+                    props.put(name, dp);
+                }
+                catch (BadValueException e)
+                {
+                    empty = true;
+                    break;
+                }
+            }
+
+            load(xml, pgroup);
+        }
+    }
+
+    private ForRange loadRange(XMLStruct xml)
+    {
+        ForRange fr = new ForRange();
+
+        for (int i = 0; i < xml.getNumChildren(); ++i)
+        {
+            XMLStruct var = xml.getChildElement(i);
+            if (var != null && var.getName().equals("var"))
+            {
+                String name = var.getAttribValueFromName("name");
+                String value = var.getAttribValueFromName("value");
+
+                if (name != null && value != null)
+                {
+                    fr.push(name, value);
+                }
+            }
+        }
+
+        return fr;
+    }
+
+    private static class ForRange
+    {
+        private ArrayList<String> names;
+        private HashMap<String, LinkedList<String>> vals;
+
+        public ForRange()
+        {
+            names = new ArrayList<String>();
+            vals = new HashMap<String, LinkedList<String>>();
+        }
+
+        public ForRange push(String name, String val)
+        {
+            LinkedList<String> q = vals.getOrDefault(name, null);
+
+            if (q == null)
+            {
+                vals.put(name, new LinkedList<String>());
+                names.add(name);
+            }
+
+            vals.get(name).addLast(val);
+            return this;
+        }
+
+        public String pop(String name)
+        {
+            LinkedList<String> q = vals.getOrDefault(name, null);
+            if (q == null || q.size() == 0)
+                return null;
+            else
+                return vals.get(name).removeFirst();
+        }
+
+        public String getName(int index)
+        {
+            if (index < 0 || index >= names.size())
+                return null;
+            else
+                return names.get(index);
+        }
+
+        public int numNames()
+        {
+            return names.size();
         }
     }
 
@@ -550,7 +664,7 @@ public class XMLModel
                 ++i[0];
 
             String found = str.substring(j, i[0]);
-            System.out.println("found=" + found);
+
 
             if (op == 0)
             {
@@ -708,19 +822,21 @@ public class XMLModel
 
         if (str.indexOf(".") == 0)
             throw new BadValueException(str);
-        else if (str.indexOf(".") < 0 && context != null)
-            str = context + "." + str;
 
-        if (!props.containsKey(str))
-        {
-            if (context == null)
-                throw new BadValueException(str);
-            str = context + "." + str;
-            if (!props.containsKey(str))
-                throw new BadValueException(str);
-        }
+        // First try without context
+        if (props.containsKey(str))
+            return props.get(str);
 
-        return props.get(str);
+        // Add context
+        if (context != null)
+            str = context + "." + str;
+        else
+            throw new BadValueException(str);
+
+        if (props.containsKey(str))
+            return props.get(str);
+
+        throw new BadValueException(str);
     }
 
     private static int skipWS(String str, int i)

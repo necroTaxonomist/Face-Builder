@@ -101,5 +101,28 @@
                 <z>ParabZ:Neckline 0</z>
             </point>
         </bezier>
+        <for>
+            <range>
+                <var name="ANGLE" value="Eyes.Corner_Angle.theta" />
+                <var name="ANGLE" value="PI / 2" />
+            </range>
+            <bezier res="7" reflect="both">
+                <point type="cyl">
+                    <r>ParabR:Jaw ANGLE</r>
+                    <theta>ANGLE</theta>
+                    <z>ParabZ:Jaw ANGLE</z>
+                </point>
+                <point type="cyl">
+                    <r>ParabR:Neck ANGLE</r>
+                    <theta>ANGLE</theta>
+                    <z>ParabZ:Neck ANGLE</z>
+                </point>
+                <point type="cyl">
+                    <r>ParabR:Neckline ANGLE</r>
+                    <theta>ANGLE</theta>
+                    <z>ParabZ:Neckline ANGLE</z>
+                </point>
+            </bezier>
+        </for>
     </section>
 </model>
