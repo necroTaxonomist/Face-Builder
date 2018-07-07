@@ -1,0 +1,71 @@
+<data>
+<pgroup name="Cheeks">
+<prop name="Height_Inner">
+-0.30000000000000004
+</prop>
+<prop name="Depth_Inner">
+0.8
+</prop>
+<prop name="Height_Outer">
+-0.2
+</prop>
+<prop name="Depth_Outer">
+0.8
+</prop>
+</pgroup>
+<pgroup name="Jaw">
+<prop name="Width">
+2.0
+</prop>
+<prop name="Height">
+-0.6
+</prop>
+<prop name="Length">
+0.8
+</prop>
+<prop name="Angle">
+2.0307963267948965
+</prop>
+</pgroup>
+<pgroup name="Eyes">
+<prop name="Spacing">
+0.30000000000000004
+</prop>
+<prop name="Depth">
+0.6
+</prop>
+<prop name="Size">
+0.15000000000000002
+</prop>
+<prop name="Bottom">
+-0.7853981633974483
+</prop>
+</pgroup>
+<pgroup name="Neckline">
+<prop name="Width">
+0.9
+</prop>
+<prop name="Height">
+-0.05
+</prop>
+<prop name="Length">
+0.4
+</prop>
+<prop name="Angle">
+2.1207963267948964
+</prop>
+</pgroup>
+<pgroup name="Brow">
+<prop name="Outer_Depth">
+0.8
+</prop>
+<prop name="Height">
+0.15000000000000002
+</prop>
+</pgroup>
+<pgroup name="Neck">
+<prop name="Fatness">
+0.0
+</prop>
+</pgroup>
+</data>

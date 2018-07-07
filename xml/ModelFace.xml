@@ -82,7 +82,7 @@
         </parab>
     </section>
     <section name="Neck" pgroup="Neck">
-        <parab res="15" name="Neck" visible="true">
+        <parab res="15" name="Neck" nolines="true">
             <center x="0" z="0">
                 <y>Jaw.Height + Neckline.Height/2</y>
             </center>

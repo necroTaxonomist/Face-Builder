@@ -435,6 +435,10 @@ public class XMLModel
             return null;
         }
 
+        String nolines = xml.getAttribValueFromName("nolines");
+        if (nolines == null)
+            nolines = "false";
+
         XMLStruct center = xml.getChildElement("center");
         if (center == null)
             return null;
@@ -462,6 +466,11 @@ public class XMLModel
         if (xml.getAttribValueFromName("name") != null)
         {
             parabs.put(xml.getAttribValueFromName("name"), mp);
+        }
+
+        if (nolines.equals("true"))
+        {
+            mp.hideLines();
         }
 
         return mp;
