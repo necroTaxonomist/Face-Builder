@@ -1,5 +1,7 @@
 import javafx.application.Application;
 
+import javafx.scene.control.MenuBar;
+
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.Scene;
@@ -20,6 +22,7 @@ public class Face extends Application
     public static ModelPane model;
     public static RotatePane rot;
     public static XMLModel face;
+    public static MenuBar menuBar;
 
     private static Face mainFace;
 
@@ -48,10 +51,16 @@ public class Face extends Application
         model.setPitch(rot.getPitch());
 
         face = new XMLModel(model, "xml/ModelFace.xml");
+        face.loadStateFromFile("xml/state.xml");
+
+        // init menu bar
+        menuBar = new MenuBar();
+        menuBar.getMenus().add(new FileMenu(face));
 
         // add to main pane
         ((BorderPane)mainPane).setCenter(model);
         ((BorderPane)mainPane).setBottom(rot);
+        ((BorderPane)mainPane).setTop(menuBar);
 
         // show
         mainStage.show();
