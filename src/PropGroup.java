@@ -38,6 +38,9 @@ public class PropGroup extends VBox
 
     public Prop getProp(String name)
     {
+        if (name == null)
+            return null;
+
         for (Prop p : props)
         {
             if (p.getName().equals(name))

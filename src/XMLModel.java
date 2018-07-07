@@ -399,7 +399,11 @@ public class XMLModel
             return null;
         }
 
-        ModelBezier mb = new ModelBezier(res);
+        String clickable = xml.getAttribValueFromName("clickable");
+        if (clickable == null)
+            clickable = "true";
+
+        ModelBezier mb = new ModelBezier(res, clickable.equals("true"));
 
         for (int i = 0; i < xml.getNumChildren(); ++i)
         {
@@ -461,6 +465,59 @@ public class XMLModel
         }
 
         return mp;
+    }
+
+    public void loadState(XMLStruct xml)
+    {
+        for (int i = 0; i < xml.getNumChildren(); ++i)
+        {
+            XMLStruct pgroup = xml.getChildElement(i);
+            if (pgroup != null && pgroup.getName().equals("pgroup"))
+            {
+                String pgname = pgroup.getAttribValueFromName("name");
+
+                if (pgname != null && pgroups.containsKey(pgname))
+                {
+                    for (int j = 0; j < pgroup.getNumChildren(); ++j)
+                    {
+                        XMLStruct prop = pgroup.getChildElement(j);
+                        if (prop != null && prop.getName().equals("prop"))
+                        {
+                            String pname = prop.getAttribValueFromName("name");
+                            Prop p = pgroups.get(pgname).getProp(pname);
+
+                            if (p != null)
+                            {
+                                String content = prop.getChildString();
+                                double value = 0;
+
+                                try
+                                {
+                                    value = Double.parseDouble(content);
+                                    p.valueProperty().setValue(value);
+                                }
+                                catch (Exception e)
+                                {
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public void loadStateFromFile(String fn)
+    {
+        try
+        {
+            XMLStruct xml = XMLStruct.parseFromFile(fn, false);
+            loadState(xml);
+        }
+        catch (XMLStruct.BadSyntaxException bse)
+        {
+            System.out.println("Unable to read XML file " + fn);
+        }
     }
 
     // Helper load functions
