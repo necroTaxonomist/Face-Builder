@@ -31,6 +31,12 @@
     <pgroup name="Neck">
         <prop name="Fatness" min="-.1" max=".1" />
     </pgroup>
+    <pgroup name="Cheeks">
+        <prop name="Height_Inner" min="-.4" max="-.2" />
+        <prop name="Depth_Inner" min=".6" max="1.0" />
+        <prop name="Height_Outer" min="-.3" max="-.1" />
+        <prop name="Depth_Outer" min=".7" max=".9" />
+    </pgroup>
 
     <section name="Eyes" pgroup="Eyes">
         <sphere reflect="both">

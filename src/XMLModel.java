@@ -3,6 +3,7 @@ import xmlparse.XMLStruct;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 
@@ -49,6 +50,8 @@ public class XMLModel
             Face.setShownPropGroup(pgroups.get(firstGroup));
         }
     }
+
+    // Load functions
 
     public void load(XMLStruct xml)
     {
@@ -460,6 +463,8 @@ public class XMLModel
         return mp;
     }
 
+    // Helper load functions
+
     private DoubleProperty loadSingleProp(XMLStruct xml, String pgroup)
     {
         String attrib = xml.getAttribValueFromName("value");
@@ -534,23 +539,7 @@ public class XMLModel
         return c;
     }
 
-    private static String xmlAttribOrElement(XMLStruct xml, String name)
-    {
-        String attrib = xml.getAttribValueFromName(name);
-        XMLStruct element = xml.getChildElement(name);
-
-        if (element == null || element.getChildString() == null)
-        {
-            if (attrib != null)
-                return attrib.trim();
-            else
-                return null;
-        }
-        else
-        {
-            return element.getChildString().trim();
-        }
-    }
+    // Non-static helpers
 
     private double interpretVal(String str) throws BadValueException
     {
@@ -839,6 +828,62 @@ public class XMLModel
         throw new BadValueException(str);
     }
 
+    // Save functions
+
+    public XMLStruct saveState()
+    {
+        XMLStruct root = new XMLStruct("data");
+
+        for (Map.Entry<String, PropGroup> entry : pgroups.entrySet())
+        {
+            PropGroup pg = entry.getValue();
+
+            XMLStruct pgxml = new XMLStruct("pgroup", "name", pg.getName());
+
+            for (int i = 0; i < pg.getNumProps(); ++i)
+            {
+                Prop p = pg.getProp(i);
+                String name = p.getName();
+                double value = p.getValue();
+
+                XMLStruct pxml = new XMLStruct("prop", "name", name);
+                pxml.addChild("" + value);
+
+                pgxml.addChild(pxml);
+            }
+
+            root.addChild(pgxml);
+        }
+
+        return root;
+    }
+
+    public String saveStateToFile(String fn)
+    {
+        XMLStruct xml = saveState();
+        return xml.saveToFile(fn, true);
+    }
+
+    // Static helpers
+
+    private static String xmlAttribOrElement(XMLStruct xml, String name)
+    {
+        String attrib = xml.getAttribValueFromName(name);
+        XMLStruct element = xml.getChildElement(name);
+
+        if (element == null || element.getChildString() == null)
+        {
+            if (attrib != null)
+                return attrib.trim();
+            else
+                return null;
+        }
+        else
+        {
+            return element.getChildString().trim();
+        }
+    }
+
     private static int skipWS(String str, int i)
     {
         for (; i < str.length(); ++i)
@@ -878,6 +923,8 @@ public class XMLModel
 
         return i;
     }
+
+    // Other static members
 
     private static class BadValueException extends Exception
     {
