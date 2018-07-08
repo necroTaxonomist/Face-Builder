@@ -78,4 +78,9 @@ public class Face extends Application
         ((BorderPane)mainFace.mainPane).setRight(pg);
         System.out.println("Switched to " + pg);
     }
+
+    public static Stage getMainStage()
+    {
+        return mainFace.mainStage;
+    }
 }
