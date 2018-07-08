@@ -4,6 +4,8 @@ import javafx.scene.control.MenuBar;
 
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
+
 import javafx.scene.Scene;
 
 import javafx.stage.Stage;
@@ -21,6 +23,7 @@ public class Face extends Application
 
     public static ModelPane model;
     public static RotatePane rot;
+    public static TFPane tf;
     public static XMLModel face;
     public static MenuBar menuBar;
 
@@ -45,10 +48,20 @@ public class Face extends Application
         // init rotate pane
         rot = new RotatePane();
 
+        // init transform pane
+        tf = new TFPane();
+
+        // Bottom vbox
+        VBox bottom = new VBox();
+        bottom.getChildren().add(rot);
+        bottom.getChildren().add(tf);
+
         // init model
         model = new ModelPane(AXIS_SIZE);
         model.setYaw(rot.getYaw());
         model.setPitch(rot.getPitch());
+        model.setBG("/test.jpg");
+        model.setBGTF(tf);
 
         face = new XMLModel(model, "xml/ModelFace.xml");
 
@@ -58,7 +71,7 @@ public class Face extends Application
 
         // add to main pane
         ((BorderPane)mainPane).setCenter(model);
-        ((BorderPane)mainPane).setBottom(rot);
+        ((BorderPane)mainPane).setBottom(bottom);
         ((BorderPane)mainPane).setTop(menuBar);
 
         // show
