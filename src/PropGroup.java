@@ -9,11 +9,13 @@ public class PropGroup extends VBox
 {
     private Label name;
     private ArrayList<Prop> props;
+    private boolean changed;
 
     public PropGroup(String _name)
     {
         name = new Label(_name);
         props = new ArrayList<Prop>();
+        changed = false;
 
         getChildren().add(name);
     }
@@ -33,6 +35,14 @@ public class PropGroup extends VBox
     public void addProp(Prop p)
     {
         props.add(p);
+
+        p.valueProperty().addListener(
+                (o, oldVal, newVal) ->
+                {
+                    changed = true;
+                }
+            );
+
         getChildren().add(p);
     }
 
@@ -82,5 +92,15 @@ public class PropGroup extends VBox
     public int getNumProps()
     {
         return props.size();
+    }
+
+    public boolean isChanged()
+    {
+        return changed;
+    }
+
+    public void resetChange()
+    {
+        changed = false;
     }
 }

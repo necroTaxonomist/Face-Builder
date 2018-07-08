@@ -1,7 +1,15 @@
 
 import java.io.File;
+
+import java.util.Optional;
+
+import javafx.scene.control.Alert;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuItem;
+
 import javafx.stage.FileChooser;
 
 public class FileMenu extends Menu
@@ -13,6 +21,8 @@ public class FileMenu extends Menu
     private MenuItem saveItem;
     private MenuItem saveAsItem;
 
+    private String working;
+
     public FileMenu(XMLModel _face)
     {
         super("File");
@@ -23,12 +33,18 @@ public class FileMenu extends Menu
         initOpenItem();
         initSaveItem();
         initSaveAsItem();
+
+        working = null;
     }
 
     private void initNewItem()
     {
         newItem = new MenuItem("New");
         getItems().add(newItem);
+        newItem.setOnAction((e) ->
+        {
+            newFile();
+        });
     }
 
     private void initOpenItem()
@@ -37,8 +53,7 @@ public class FileMenu extends Menu
         getItems().add(openItem);
         openItem.setOnAction((e) ->
         {
-            XMLChooser chooser = new XMLChooser("Open", 'r');
-            System.out.println(chooser.choose());
+            openFile();
         });
     }
 
@@ -46,6 +61,10 @@ public class FileMenu extends Menu
     {
         saveItem = new MenuItem("Save");
         getItems().add(saveItem);
+        saveItem.setOnAction((e) ->
+        {
+            saveFile();
+        });
     }
 
     private void initSaveAsItem()
@@ -54,11 +73,87 @@ public class FileMenu extends Menu
         getItems().add(saveAsItem);
         saveAsItem.setOnAction((e) ->
         {
-            XMLChooser chooser = new XMLChooser("Save", 'w');
-            System.out.println(chooser.choose());
+            saveAsFile();
         });
     }
 
+    private void newFile()
+    {
+        if (face != null && face.isChanged() && askForSave())
+        {
+            working = null;
+            face.reset();
+        }
+    }
+
+    private void openFile()
+    {
+        if (face != null && face.isChanged() && !askForSave())
+        {
+            return;
+        }
+
+        XMLChooser chooser = new XMLChooser("Open", 'r');
+        String fn = chooser.choose();
+        if (fn != null && face != null)
+        {
+            face.loadStateFromFile(fn);
+            working = fn;
+            face.resetChange();
+        }
+    }
+
+    private void saveFile()
+    {
+        if (working == null)
+            saveAsFile();
+        else
+        {
+            face.saveStateToFile(working);
+            face.resetChange();
+        }
+    }
+
+    private void saveAsFile()
+    {
+        XMLChooser chooser = new XMLChooser("Save", 'w');
+        String fn = chooser.choose();
+        if (fn != null && face != null)
+        {
+            face.saveStateToFile(fn);
+            working = fn;
+            face.resetChange();
+        }
+    }
+
+    private boolean askForSave()
+    {
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+        alert.setTitle(null);
+        alert.setHeaderText(null);
+        alert.setContentText("Save the current file before continuing?");
+
+        ButtonType saveBtn = new ButtonType("Yes");
+        ButtonType continueBtn = new ButtonType("No");
+        ButtonType cancelBtn = new ButtonType("Cancel", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+        alert.getButtonTypes().setAll(saveBtn, continueBtn, cancelBtn);
+
+        Optional<ButtonType> result = alert.showAndWait();
+        if (result.get() == continueBtn)
+        {
+            return true;
+        }
+        else if (result.get() == saveBtn)
+        {
+            saveFile();
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
 
     private static class XMLChooser
     {

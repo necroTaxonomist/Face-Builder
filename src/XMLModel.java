@@ -51,6 +51,45 @@ public class XMLModel
         }
     }
 
+    public boolean isChanged()
+    {
+        for (Map.Entry<String, PropGroup> entry : pgroups.entrySet())
+        {
+            PropGroup pg = entry.getValue();
+
+            if (pg.isChanged())
+                return true;
+        }
+
+        return false;
+    }
+
+    public void resetChange()
+    {
+        for (Map.Entry<String, PropGroup> entry : pgroups.entrySet())
+        {
+            PropGroup pg = entry.getValue();
+            pg.resetChange();
+        }
+    }
+
+    public void reset()
+    {
+        for (Map.Entry<String, PropGroup> entry : pgroups.entrySet())
+        {
+            PropGroup pg = entry.getValue();
+
+            for (int i = 0; i < pg.getNumProps(); ++i)
+            {
+                Prop p = pg.getProp(i);
+
+                p.setToDefault();
+            }
+
+            pg.resetChange();
+        }
+    }
+
     // Load functions
 
     public void load(XMLStruct xml)

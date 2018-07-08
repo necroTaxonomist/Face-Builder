@@ -51,7 +51,6 @@ public class Face extends Application
         model.setPitch(rot.getPitch());
 
         face = new XMLModel(model, "xml/ModelFace.xml");
-        face.loadStateFromFile("xml/state.xml");
 
         // init menu bar
         menuBar = new MenuBar();
