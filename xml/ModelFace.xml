@@ -1,7 +1,7 @@
 <model name="Face">
     <pgroup name="Eyes">
-        <prop name="Spacing" min=".2" max=".4" />
-        <prop name="Depth" min=".5" max=".7" />
+        <prop name="Spacing" min=".18" max=".38" default=".28" />
+        <prop name="Depth" min=".44" max=".64" default=".54" />
         <prop name="Size" min=".1" max=".2" />
         <prop name="Bottom" min="-PI/2" max="-PI/8" default="-PI/4" />
         <val name="Corner">
@@ -17,16 +17,16 @@
         <prop name="Height" min=".1" max=".2" />
     </pgroup>
     <pgroup name="Jaw">
-        <prop name="Width" min=".8" max="1.2" />
-        <prop name="Height" min="-.7" max="-.5" />
-        <prop name="Length" min=".7" max="1.0" default=".8"/>
-        <prop name="Angle" min=".26 + PI/2" max=".66 + PI/2" />
+        <prop name="Width" min=".78" max="1.18" default=".98"/>
+        <prop name="Height" min="-.67" max="-.47" default="-.57"/>
+        <prop name="Length" min=".55" max=".85" default=".7"/>
+        <prop name="Angle" min=".32 + PI/2" max=".72 + PI/2" default=".52 + PI/2"/>
     </pgroup>
     <pgroup name="Neckline">
-        <prop name="Width" min=".7" max="1.1" />
-        <prop name="Height" min="-.1" max="0" />
-        <prop name="Length" min=".3" max=".6" default=".4"/>
-        <prop name="Angle" min=".3 + PI/2" max=".8 + PI/2" />
+        <prop name="Width" min=".68" max="1.08" default=".88"/>
+        <prop name="Height" min="-.126" max="0" default="-.063"/>
+        <prop name="Length" min=".23" max=".53" default=".38"/>
+        <prop name="Angle" min="0.38 + PI/2" max=".88 + PI/2" default=".63 + PI/2" />
     </pgroup>
     <pgroup name="Neck">
         <prop name="Fatness" min="-.1" max=".1" />
@@ -36,6 +36,24 @@
         <prop name="Depth_Inner" min=".6" max="1.0" />
         <prop name="Height_Outer" min="-.3" max="-.1" />
         <prop name="Depth_Outer" min=".7" max=".9" />
+    </pgroup>
+    <pgroup name="Mouth">
+        <prop name="Height" min="-.66" max="-.46" default="-.56"/>
+        <prop name="Width" min=".32" max=".52" default=".42"/>
+        <prop name="Depth" min=".59" max=".79" default=".69"/>
+        <prop name="Bite_Size" min="0" max=".13" default=".065"/>
+    </pgroup>
+    <pgroup name="Lips">
+        <prop name="Upper_Length" min="0" max=".2" default=".1" />
+        <prop name="Upper_Height" min="-PI/2" max=".74 - PI/2" default=".37 - PI/2" />
+        <prop name="Lower_Length" min="0" max=".128" default=".064" />
+        <prop name="Lower_Height" min="-1.275 - PI/2" max="-PI/2" default="-.85 - PI/2" />
+    </pgroup>
+    <pgroup name="Chin">
+        <prop name="Outer_Depth" min="0" max=".2" default=".05"/>
+        <prop name="Inner_Depth" min="0" max=".2" default=".05"/>
+        <prop name="Side_Height" min="0" max=".05"/>
+        
     </pgroup>
 
     <section name="Eyes" pgroup="Eyes">
@@ -90,25 +108,9 @@
             <length>Jaw.Length/2 + Neckline.Length/2 + Neck.Fatness</length>
             <angle>Jaw.Angle/2 + Neckline.Angle/2</angle>
         </parab>
-        <bezier res="7" clickable="false">
-            <point type="cyl">
-                <r>ParabR:Jaw 0</r>
-                <theta>0</theta>
-                <z>ParabZ:Jaw 0</z>
-            </point>
-            <point type="cyl">
-                <r>ParabR:Neck 0</r>
-                <theta>0</theta>
-                <z>ParabZ:Neck 0</z>
-            </point>
-            <point type="cyl">
-                <r>ParabR:Neckline 0</r>
-                <theta>0</theta>
-                <z>ParabZ:Neckline 0</z>
-            </point>
-        </bezier>
         <for>
             <range>
+                <var name="ANGLE" value="0" />
                 <var name="ANGLE" value="Eyes.Corner_Angle.theta" />
                 <var name="ANGLE" value="PI / 2" />
             </range>
@@ -130,5 +132,54 @@
                 </point>
             </bezier>
         </for>
+    </section>
+    <section name="Mouth" pgroup="Mouth">
+        <parab res="7" name="Mouth">
+            <center x="0" y="Mouth.Height" z="Mouth.Depth" />
+            <width>Mouth.Width</width>
+            <length>Mouth.Bite_Size</length>
+            <angle>PI/2</angle>
+        </parab>
+    </section>
+    <section name="Lips" pgroup="Lips">
+        <parab res="7" name="Upper_Lip">
+            <center x="0" y="Mouth.Height" z="Mouth.Depth" />
+            <width>Mouth.Width</width>
+            <length>Mouth.Bite_Size + Lips.Upper_Length</length>
+            <angle>-Lips.Upper_Height</angle>
+        </parab>
+        <parab res="7" name="Lower_Lip">
+            <center x="0" y="Mouth.Height" z="Mouth.Depth" />
+            <width>Mouth.Width</width>
+            <length>Mouth.Bite_Size + Lips.Lower_Length</length>
+            <angle>-Lips.Lower_Height</angle>
+        </parab>
+    </section>
+    <section name="Chin" pgroup="Chin">
+        <val name="Height">
+            ParabZ:Lower_Lip - ParabZ:Jaw
+        </val>
+        <bezier res="7" reflect="false">
+            <point type="cyl">
+                <r>ParabR:Jaw 0</r>
+                <theta>0</theta>
+                <z>ParabZ:Jaw 0</z>
+            </point>
+            <point type="cyl">
+                <r>ParabR:Lower_Lip 0 - Chin.Outer_Depth</r>
+                <theta>0</theta>
+                <z>Chin.Height</z>
+            </point>
+            <point type="cyl">
+                <r>ParabR:Lower_Lip 0 - Chin.Inner_Depth</r>
+                <theta>0</theta>
+                <z>0</z>
+            </point>
+            <point type="cyl">
+                <r>ParabR:Lower_Lip 0</r>
+                <theta>0</theta>
+                <z>ParabZ:Lower_Lip 0</z>
+            </point>
+        </bezier>
     </section>
 </model>

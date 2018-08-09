@@ -105,24 +105,28 @@ public class XMLModel
 
         for (int i = 0; i < xml.getNumChildren(); ++i)
         {
-            XMLStruct section = xml.getChildElement(i);
-            if (section != null)
+            XMLStruct tag = xml.getChildElement(i);
+            if (tag != null)
             {
-                if (section.getName().equals("pgroup"))
+                if (tag.getName().equals("pgroup"))
                 {
-                    loadPgroup(section);
+                    loadPgroup(tag);
                 }
-                else if (section.getName().equals("section"))
+                else if (tag.getName().equals("section"))
                 {
-                    load(section);
+                    load(tag);
                 }
-                else if (section.getName().equals("for"))
+                else if (tag.getName().equals("for"))
                 {
-                    loadFor(section, pgroup);
+                    loadFor(tag, pgroup);
+                }
+                else if (tag.getName().equals("val"))
+                {
+                    loadVal(tag, pgroup);
                 }
                 else
                 {
-                    loadShape(section, pgroup);
+                    loadShape(tag, pgroup);
                 }
             }
         }
@@ -462,8 +466,6 @@ public class XMLModel
 
     private ModelParab loadParab(XMLStruct xml, String pgroup)
     {
-        System.out.println("hey");
-
         int res;
         try
         {
@@ -505,6 +507,7 @@ public class XMLModel
         if (xml.getAttribValueFromName("name") != null)
         {
             parabs.put(xml.getAttribValueFromName("name"), mp);
+            System.out.println("Parab " + xml.getAttribValueFromName("name"));
         }
 
         if (nolines.equals("true"))
