@@ -1,2 +1,4 @@
 bin/
 todokete.txt
+*.sublime-project
+*.sublime-workspace

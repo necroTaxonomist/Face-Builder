@@ -1,1 +1,1 @@
-java -cp "./bin;..\XML-Parse\bin\XMLParse.jar" Face
+java -cp "./bin;../XML-Parse/bin/XMLParse.jar;..\Exp-Parse\bin\ExpParse.jar" Face
