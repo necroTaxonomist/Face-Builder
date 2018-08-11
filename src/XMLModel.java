@@ -1,3 +1,6 @@
+import expparse.ExpNode;
+import expparse.ExpParse;
+
 import xmlparse.XMLStruct;
 
 import java.util.ArrayList;
@@ -18,6 +21,29 @@ public class XMLModel
 
     private ModelPane mp;
     private String firstGroup;
+
+    private static ExpParse parser;
+
+    static
+    {
+        parser = new ExpParse();
+
+        parser.addInfixOp(",", 0);
+
+        parser.addInfixOp("+", 1);
+        parser.addInfixOp("-", 1);
+
+        parser.addInfixOp("*", 2);
+        parser.addInfixOp("/", 2);
+
+        parser.addPrefixOp("-", 3);
+
+        parser.addPrefixOp("cos", 3);
+        parser.addPrefixOp("sin", 3);
+
+        parser.addPrefixOp("ParabR", 3);
+        parser.addPrefixOp("ParabZ", 3);
+    }
 
     public XMLModel(ModelPane _mp)
     {
@@ -651,262 +677,286 @@ public class XMLModel
 
     private double interpretVal(String str) throws BadValueException
     {
-        int[] i = new int[1];
-        i[0] = 0;
-        return interpretVal(str, i);
-    }
-    private double interpretVal(String str, int[] i) throws BadValueException
-    {
         if (str == null)
-            throw new BadValueException(str);
+            throw new BadValueException("Passed null string");
 
-        double val = 0;
-        char op = '+';
-        boolean first = true;
+        System.out.println("Interpreting \"" + str + "\"");
+        ExpNode exp = parser.parse(str);
 
-        while (i[0] < str.length())
+        if (exp == null)
         {
-            int j = skipWS(str, i[0]);
-            i[0] = skipUntil(str, j, WS_OR_OP);
-
-            if (i[0] == j)  // single operator
-                ++i[0];
-
-            String found = str.substring(j, i[0]);
-
-            if (op == 0)
+            throw new BadValueException("Bad expression");
+        }
+        else
+        {
+            return interpretVal(exp);
+        }
+    }
+    private double interpretVal(ExpNode exp) throws BadValueException
+    {
+        String op = exp.getVal();
+        if (op.equals("+"))
+        {
+            double sum = 0;
+            for (ExpNode child : exp)
+                sum += interpretVal(child);
+            return sum;
+        }
+        else if (op.equals("-"))
+        {
+            if (exp.getNumChildren() == 1)
             {
-                // Get the operation to use
-                if (found.length() > 1)
-                    throw new BadValueException(str);
-
-                op = found.charAt(0);
+                return -interpretVal(exp.getChild());
             }
             else
             {
-                double foundVal = 0;
-                if ((op == '+' || op == '-') && !first)
+                double difference = 0;
+                boolean first = true;
+                for (ExpNode child : exp)
                 {
-                    i[0] = j;
-                    foundVal = interpretVal(str, i);
-                }
-                else
-                {
-                    if (found.charAt(0) == '-')
+                    if (first)
                     {
-                        j = i[0];
-                        i[0] = skipUntil(str, j, WS_OR_OP);
-                        found = "-" + str.substring(j, i[0]);
+                        System.out.println("First is " + interpretVal(child));
+                        difference = interpretVal(child);
+                        first = false;
                     }
-
-                    if (found.equals("PI"))
-                        foundVal = Math.PI;
-                    else if (found.equals("-PI"))
-                        foundVal = -Math.PI;
                     else
                     {
-                        try
-                        {
-                            foundVal = Double.parseDouble(found);
-                        }
-                        catch (Exception e)
-                        {
-                            throw new BadValueException(str);
-                        }
+                        System.out.println("Subtract " + interpretVal(child));
+                        difference -= interpretVal(child);
                     }
                 }
-
-                if (op == '+')
-                    val += foundVal;
-                else if (op == '-')
-                    val -= foundVal;
-                else if (op == '*')
-                    val *= foundVal;
-                else if (op == '/')
-                    val /= foundVal;
-                else
-                    throw new BadValueException(str);
-
-                op = 0;
+                System.out.println("Result is " + difference);
+                return difference;
             }
-
-            first = false;
         }
-
-        return val;
+        else if (op.equals("*"))
+        {
+            double product = 1;
+            for (ExpNode child : exp)
+                product *= interpretVal(child);
+            return product;
+        }
+        else if (op.equals("/"))
+        {
+            double quotient = 1;
+            boolean first = true;
+            for (ExpNode child : exp)
+            {
+                if (first)
+                {
+                    quotient = interpretVal(child);
+                    first = false;
+                }
+                else
+                {
+                    quotient /= interpretVal(child);
+                }
+            }
+            return quotient;
+        }
+        else if (op.equals("cos"))
+        {
+            return Math.cos(interpretVal(exp.getChild()));
+        }
+        else if (op.equals("sin"))
+        {
+            return Math.sin(interpretVal(exp.getChild()));
+        }
+        else if (op.equals("PI"))
+        {
+            return Math.PI;
+        }
+        else
+        {
+            try
+            {
+                double val = Double.parseDouble(op);
+                return val;
+            }
+            catch (Exception e)
+            {
+                throw new BadValueException("Unexpected token " + op);
+            }
+        }
     }
 
     private DoubleProperty resolveProp(String str, String context) throws BadValueException
     {
-        int[] i = new int[1];
-        i[0] = 0;
-        return resolveProp(str, context, i);
-    }
-    private DoubleProperty resolveProp(String str, String context, int[] i) throws BadValueException
-    {
-        if (str == null)
-            throw new BadValueException(str);
+        System.out.println("Resolving \"" + str + "\"");
+        ExpNode exp = parser.parse(str);
 
-        DoubleProperty prop = null;
-        char op = '+';
-        String unaryOp = null;
-        boolean first = true;
-
-        while (i[0] < str.length())
+        if (exp == null)
         {
-            int j = skipWS(str, i[0]);
-            i[0] = skipUntil(str, j, WS_OR_OP);
-
-            if (i[0] == j)  // single operator
-                ++i[0];
-
-            String found = str.substring(j, i[0]);
-
-
-            if (op == 0)
+            throw new BadValueException("Bad expression");
+        }
+        else
+        {
+            return resolveProp(exp, context);
+        }
+    }
+    private DoubleProperty resolveProp(ExpNode exp, String context) throws BadValueException
+    {
+        String op = exp.getVal();
+        if (op.equals("+"))
+        {
+            if (exp.getNumChildren() == 2)
             {
-                // Get the operation to use
-                if (found.length() > 1)
-                    throw new BadValueException(str);
+                DoubleProperty lhs = resolveProp(exp.getChild(0), context);
+                DoubleProperty rhs = resolveProp(exp.getChild(1), context);
 
-                op = found.charAt(0);
+                Binder b = new SumBinder(lhs, rhs);
+                binders.add(b);
+                return b.valueProperty();
             }
             else
             {
-                DoubleProperty foundProp = null;
-                double foundVal = 0;
-                boolean isConst = false;
-                boolean neg = false;
-                boolean isUnaryOp = false;
+                throw new BadValueException("Improper number of args to " + op);
+            }
+        }
+        else if (op.equals("-"))
+        {
+            if (exp.getNumChildren() == 2)
+            {
+                DoubleProperty lhs = resolveProp(exp.getChild(0), context);
+                DoubleProperty rhs = resolveProp(exp.getChild(1), context);
 
-                if ((op == '+' || op == '-') && !first)
+                Binder b = new DiffBinder(lhs, rhs);
+                binders.add(b);
+                return b.valueProperty();
+            }
+            else if (exp.getNumChildren() == 1)
+            {
+                DoubleProperty arg = resolveProp(exp.getChild(), context);
+
+                Binder b = new Binder(arg.multiply(-1));
+                binders.add(b);
+                return b.valueProperty();
+            }
+            else
+            {
+                throw new BadValueException("Improper number of args to " + op);
+            }
+        }
+        else if (op.equals("*"))
+        {
+            if (exp.getNumChildren() == 2)
+            {
+                DoubleProperty lhs = resolveProp(exp.getChild(0), context);
+                DoubleProperty rhs = resolveProp(exp.getChild(1), context);
+
+                Binder b = new Binder(lhs.multiply(rhs));
+                binders.add(b);
+                return b.valueProperty();
+            }
+            else
+            {
+                throw new BadValueException("Improper number of args to " + op);
+            }
+        }
+        else if (op.equals("/"))
+        {
+            if (exp.getNumChildren() == 2)
+            {
+                DoubleProperty lhs = resolveProp(exp.getChild(0), context);
+                DoubleProperty rhs = resolveProp(exp.getChild(1), context);
+
+                Binder b = new Binder(lhs.divide(rhs));
+                binders.add(b);
+                return b.valueProperty();
+            }
+            else
+            {
+                throw new BadValueException("Improper number of args to " + op);
+            }
+        }
+        else if (op.equals("cos"))
+        {
+            throw new BadValueException("Unsupported operation " + op);
+        }
+        else if (op.equals("sin"))
+        {
+            throw new BadValueException("Unsupported operation " + op);
+        }
+        else if (op.indexOf("Parab") == 0)
+        {
+            if (exp.getNumChildren() == 1)
+            {
+                ExpNode argsExp = exp.getChild();
+
+                if (argsExp.getVal().equals(",") &&
+                    argsExp.getNumChildren() == 2)
                 {
-                    i[0] = j;
-                    foundProp = resolveProp(str, context, i);
-                    isConst = false;
+                    String parabName = argsExp.getChild(0).getVal();
+                    DoubleProperty theta = resolveProp(argsExp.getChild(1), context);
+
+                    if (!parabs.containsKey(parabName))
+                        throw new BadValueException("Unrecognized parabola " + parabName);
+                    ModelParab mp = parabs.get(parabName);
+                    
+                    if (op.charAt(5) == 'R')
+                        return mp.getRProp(theta);
+                    else if (op.charAt(5) == 'Z')
+                        return mp.getZProp(theta);
+                    else
+                        throw new BadValueException("Unrecognized parab function " + op);
                 }
                 else
                 {
-                    if (found.equals("-") ||
-                        found.equals("cos") ||
-                        found.equals("sin") ||
-                        found.indexOf("ParabR:") == 0 ||
-                        found.indexOf("ParabZ:") == 0)
-                    {
-                        unaryOp = found;
-                        isUnaryOp = true;
-                    }
-                    else
-                    {
-                        if (found.equals("PI"))
-                        {
-                            foundVal = Math.PI;
-                            isConst = true;
-                        }
-                        else
-                        {
-                            try
-                            {
-                                foundVal = Double.parseDouble(found);
-                                isConst = true;
-                            }
-                            catch (Exception e)
-                            {
-                            }
-                        }
-
-                        if (!isConst)
-                        {
-                            try
-                            {
-                                foundProp = resolveSingleProp(found, context);
-                                isConst = false;
-                            }
-                            catch (Exception e)
-                            {
-                                throw new BadValueException(str);
-                            }
-                        }
-                        else
-                        {
-                            if (constProps.containsKey(foundVal))
-                                foundProp = constProps.get(foundVal);
-                            else
-                            {
-                                foundProp = new SimpleDoubleProperty(foundVal);
-                                constProps.put(foundVal, foundProp);
-                            }
-                        }
-                    }
-                }
-
-                if (!isUnaryOp)
-                {
-                    if (unaryOp != null)
-                    {
-                        if (unaryOp.equals("-"))
-                        {
-                            Binder b = new Binder(foundProp.multiply(-1));
-                            binders.add(b);
-                            foundProp = b.valueProperty();
-                        }
-                        else if (unaryOp.indexOf("Parab") == 0)
-                        {
-                            char get = unaryOp.charAt(5);
-                            String pname = unaryOp.substring(7);
-
-                            if (!parabs.containsKey(pname))
-                                throw new BadValueException(str);
-
-                            ModelParab mp = parabs.get(pname);
-
-                            if (get == 'R')
-                                foundProp = mp.getRProp(foundProp);
-                            else if (get == 'Z')
-                                foundProp = mp.getZProp(foundProp);
-                            else
-                                throw new BadValueException(str);
-                        }
-                        unaryOp = null;
-                    }
-
-                    if (op == '+' && first)
-                        prop = foundProp;
-                    else if (op == '+' && !first)
-                    {
-                        Binder b = new SumBinder(prop, foundProp);
-                        binders.add(b);
-                        prop = b.valueProperty();
-                    }
-                    else if (op == '-')
-                    {
-                        Binder b = new DiffBinder(prop, foundProp);
-                        binders.add(b);
-                        prop = b.valueProperty();
-                    }
-                    else if (op == '*' && isConst)
-                    {
-                        Binder b = new Binder(prop.multiply(foundVal));
-                        binders.add(b);
-                        prop = b.valueProperty();
-                    }
-                    else if (op == '/' && isConst)
-                    {
-                        Binder b = new Binder(prop.divide(foundVal));
-                        binders.add(b);
-                        prop = b.valueProperty();
-                    }
-                    else
-                        throw new BadValueException(str);
-
-                    op = 0;
-
-                    first = false;
+                    throw new BadValueException("Improper number of args to " + op);
                 }
             }
+            else
+            {
+                throw new BadValueException("Improper number of args to " + op);
+            }
         }
+        else
+        {
+            DoubleProperty prop = null;
 
-        return prop;
+            try
+            {
+                prop = resolveSingleProp(op, context);
+            }
+            catch (BadValueException e)
+            {
+                prop = null;
+            }
+
+            if (prop == null)
+            {
+                double val = 0;
+
+                if (op.equals("PI"))
+                {
+                    val = Math.PI;
+                }
+                else
+                {
+                    try
+                    {
+                        val = Double.parseDouble(op);
+                    }
+                    catch (Exception e)
+                    {
+                        throw new BadValueException("Unexpected token " + op);
+                    }
+                }
+
+                if (constProps.containsKey(val))
+                {
+                    return constProps.get(val);
+                }
+                else
+                {
+                    prop = new SimpleDoubleProperty(val);
+                    constProps.put(val, prop);
+                }
+            }
+
+            return prop;
+        }
     }
 
     private DoubleProperty resolveSingleProp(String str, String context) throws BadValueException

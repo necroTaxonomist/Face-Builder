@@ -50,8 +50,8 @@
         <prop name="Lower_Height" min="-1.275 - PI/2" max="-PI/2" default="-.85 - PI/2" />
     </pgroup>
     <pgroup name="Chin">
-        <prop name="Outer_Depth" min="0" max=".2" default=".05"/>
-        <prop name="Inner_Depth" min="0" max=".2" default=".05"/>
+        <prop name="Outer_Depth" min="-.2" max="0" default="-.066"/>
+        <prop name="Inner_Depth" min="0" max=".3" default=".166"/>
         <prop name="Side_Height" min="0" max=".05"/>
         
     </pgroup>
@@ -116,19 +116,19 @@
             </range>
             <bezier res="7" reflect="both" clickable="false">
                 <point type="cyl">
-                    <r>ParabR:Jaw ANGLE</r>
+                    <r>ParabR(Jaw, ANGLE)</r>
                     <theta>ANGLE</theta>
-                    <z>ParabZ:Jaw ANGLE</z>
+                    <z>ParabZ(Jaw, ANGLE)</z>
                 </point>
                 <point type="cyl">
-                    <r>ParabR:Neck ANGLE</r>
+                    <r>ParabR(Neck, ANGLE)</r>
                     <theta>ANGLE</theta>
-                    <z>ParabZ:Neck ANGLE</z>
+                    <z>ParabZ(Neck, ANGLE)</z>
                 </point>
                 <point type="cyl">
-                    <r>ParabR:Neckline ANGLE</r>
+                    <r>ParabR(Neckline, ANGLE)</r>
                     <theta>ANGLE</theta>
-                    <z>ParabZ:Neckline ANGLE</z>
+                    <z>ParabZ(Neckline, ANGLE)</z>
                 </point>
             </bezier>
         </for>
@@ -156,29 +156,26 @@
         </parab>
     </section>
     <section name="Chin" pgroup="Chin">
-        <val name="Height">
-            ParabZ:Lower_Lip - ParabZ:Jaw
-        </val>
         <bezier res="7" reflect="false">
             <point type="cyl">
-                <r>ParabR:Jaw 0</r>
+                <r>ParabR(Jaw, 0)</r>
                 <theta>0</theta>
-                <z>ParabZ:Jaw 0</z>
+                <z>ParabZ(Jaw, 0)</z>
             </point>
             <point type="cyl">
-                <r>ParabR:Lower_Lip 0 - Chin.Outer_Depth</r>
+                <r>ParabR(Lower_Lip, 0) - Chin.Outer_Depth</r>
                 <theta>0</theta>
-                <z>Chin.Height</z>
+                <z>(3 * ParabZ(Jaw, 0) + ParabZ(Lower_Lip, 0)) / 4</z>
             </point>
             <point type="cyl">
-                <r>ParabR:Lower_Lip 0 - Chin.Inner_Depth</r>
+                <r>ParabR(Lower_Lip, 0) - Chin.Inner_Depth</r>
                 <theta>0</theta>
-                <z>0</z>
+                <z>(ParabZ(Jaw, 0) + 3 * ParabZ(Lower_Lip, 0)) / 4</z>
             </point>
             <point type="cyl">
-                <r>ParabR:Lower_Lip 0</r>
+                <r>ParabR(Lower_Lip, 0)</r>
                 <theta>0</theta>
-                <z>ParabZ:Lower_Lip 0</z>
+                <z>ParabZ(Lower_Lip, 0)</z>
             </point>
         </bezier>
     </section>
