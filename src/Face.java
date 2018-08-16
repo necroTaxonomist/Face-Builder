@@ -60,7 +60,7 @@ public class Face extends Application
         model = new ModelPane(AXIS_SIZE);
         model.setYaw(rot.getYaw());
         model.setPitch(rot.getPitch());
-        model.setBG("side.png");
+        //model.setBG("side.png");
         model.setBGTF(tf);
 
         face = new XMLModel(model, "xml/ModelFace.xml");

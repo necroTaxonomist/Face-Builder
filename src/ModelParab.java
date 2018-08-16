@@ -214,10 +214,15 @@ public class ModelParab extends Group implements ModelShape
     
     private double xOfTheta(double theta)
     {
+        return xOfTheta(theta, true);
+    }
+
+    private double xOfTheta(double theta, boolean local)
+    {
         double[] whVal = wh.getValue();
         double w = whVal[0];
         double h = whVal[1];
-        
+
         if (theta == 0)
             return w / 2;
         else if (theta == Math.PI / 2)
@@ -227,10 +232,21 @@ public class ModelParab extends Group implements ModelShape
         
         double A = -4 * h / (w * w) * Math.sin(rot.getValue());
         double B = w / 2;
+
+        double T;
+        if (!local)
+        {
+            double[] tlVal = center.getValue();
+            T = tlVal[2];
+        }
+        else
+        {
+            T = 0;
+        }
         
         double a = A;
         double b = -Math.tan(theta);
-        double c = -A * B * B;
+        double c = -A * B * B + T;
         
         double disc = b*b - 4*a*c;
         
@@ -315,7 +331,7 @@ public class ModelParab extends Group implements ModelShape
     
     private void updateRZ(DoubleProperty theta)
     {
-        double x = xOfTheta(Math.PI/2 - theta.getValue());
+        double x = xOfTheta(Math.PI/2 - theta.getValue(), false);
         double y = yOfX(x);
         
         double[][] vert = Matrix.makeColVec(x, y, 0, 1);

@@ -146,9 +146,13 @@ public class XMLModel
                 {
                     loadFor(tag, pgroup);
                 }
-                else if (tag.getName().equals("val"))
+                else if (pgroup != null && tag.getName().equals("val"))
                 {
                     loadVal(tag, pgroup);
+                }
+                else if (pgroup != null && tag.getName().equals("angleval"))
+                {
+                    loadAngleVal(tag, pgroup);
                 }
                 else
                 {
@@ -890,9 +894,14 @@ public class XMLModel
                     String parabName = argsExp.getChild(0).getVal();
                     DoubleProperty theta = resolveProp(argsExp.getChild(1), context);
 
+                    System.out.println("Theta=" + theta.getValue());
+
                     if (!parabs.containsKey(parabName))
                         throw new BadValueException("Unrecognized parabola " + parabName);
                     ModelParab mp = parabs.get(parabName);
+
+                    System.out.println("R=" + mp.getRProp(theta).getValue());
+                    System.out.println("Z=" + mp.getZProp(theta).getValue());
                     
                     if (op.charAt(5) == 'R')
                         return mp.getRProp(theta);
