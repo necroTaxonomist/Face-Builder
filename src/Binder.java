@@ -12,14 +12,22 @@ public class Binder
     public Binder(DoubleBinding _binding)
     {
         binding = _binding;
-        value = new SimpleDoubleProperty(binding.getValue());
+
+        if (binding != null)
+        {
+            value = new SimpleDoubleProperty(binding.getValue());
         
-        binding.addListener(
-                (o, oldVal, newVal) ->
-                {
-                    value.setValue(binding.getValue());
-                }
-            );
+            binding.addListener(
+                    (o, oldVal, newVal) ->
+                    {
+                        value.setValue(binding.getValue());
+                    }
+                );
+        }
+        else
+        {
+            value = null;
+        }
     }
     
     public DoubleProperty valueProperty()

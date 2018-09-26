@@ -3,12 +3,16 @@
         <prop name="Spacing" min=".18" max=".38" default=".28" />
         <prop name="Depth" min=".44" max=".64" default=".54" />
         <prop name="Size" min=".1" max=".2" />
-        <prop name="Bottom" min="-PI/2" max="-PI/8" default="-PI/4" />
+        <prop name="Bottom" min="-PI/4" max="-PI/8"/>
         <val name="Corner">
             Spacing + Size
         </val>
         <angleval name="Corner_Angle">
             <x>Corner</x>
+            <z>Depth</z>
+        </angleval>
+        <angleval name="Eye_Angle">
+            <x>Spacing</x>
             <z>Depth</z>
         </angleval>
     </pgroup>
@@ -34,13 +38,6 @@
 
     <pgroup name="Neck">
         <prop name="Fatness" min="-.1" max=".1" />
-    </pgroup>
-
-    <pgroup name="Cheeks">
-        <prop name="Height_Inner" min="-.4" max="-.2" />
-        <prop name="Depth_Inner" min=".6" max="1.0" />
-        <prop name="Height_Outer" min="-.3" max="-.1" />
-        <prop name="Depth_Outer" min=".7" max=".9" />
     </pgroup>
 
     <pgroup name="Mouth">
@@ -107,8 +104,22 @@
         <prop name="Height" min="0" max="1" />
     </pgroup>
 
+    <pgroup name="Cheeks">
+        <prop name="Height" min="-.45" max="-.15" />
+        <prop name="Depth" min=".7" max="1" />
+        <prop name="Spacing" min="-PI/32" max="PI/32" />
+        <prop name="Puff" min="0" max=".5" />
+
+        <val name="Side_Depth">
+            (Depth^2 + Width^2)^(1/2)
+        </val>
+        <val name="Side_Angle">
+            atan2(Width, Depth)
+        </val>
+    </pgroup>
+
     <section name="Eyes" pgroup="Eyes">
-        <sphere reflect="both">
+        <sphere reflect="both" visible="true">
             <center x="Eyes.Spacing" y="0" z="Eyes.Depth" />
             <radius>Eyes.Size</radius>
         </sphere>
@@ -159,7 +170,7 @@
             <center x="0" z="0">
                 <y>Jaw.Height + Neckline.Height/2</y>
             </center>
-            <width>Jaw.Width</width>
+            <width>.75*Jaw.Width + .25*Neckline.Width</width>
             <length>Jaw.Length/2 + Neckline.Length/2 + Neck.Fatness</length>
             <angle>Jaw.Angle/2 + Neckline.Angle/2</angle>
         </parab>
@@ -167,6 +178,7 @@
             <range>
                 <var name="ANGLE" value="0" />
                 <var name="ANGLE" value="Eyes.Corner_Angle.theta" />
+                <var name="ANGLE" value="Eyes.Eye_Angle.theta" />
                 <var name="ANGLE" value="PI / 2" />
             </range>
             <bezier res="7" reflect="both" clickable="false">
@@ -341,7 +353,7 @@
             <point>
                 <x>Mouth.Width / 2</x>
                 <y>Mouth.Height*(1-Philtrum.Outer_Curve) + Nose.Height*(Philtrum.Outer_Curve)</y>
-                <z>Mouth.Depth</z>
+                <z>Nose.Depth</z>
             </point>
             <point>
                 <x>Mouth.Width / 2</x>
@@ -401,6 +413,45 @@
                 <x>Eyes.Spacing - Eyes.Size</x>
                 <y>0</y>
                 <z>Eyes.Depth + Sinuses.Depth</z>
+            </point>
+        </bezier>
+    </section>
+
+    <section name="Cheeks" pgroup="Cheeks">
+        <!-- cheekbone to chin -->
+        <bezier res="10" reflect="both">
+            <point type="cyl">
+                <r>Cheeks.Depth</r>
+                <theta>Eyes.Eye_Angle.theta + Cheeks.Spacing</theta>
+                <z>Cheeks.Height</z>
+            </point>
+            <point type="cyl">
+                <r>Cheeks.Depth</r>
+                <theta>Eyes.Eye_Angle.theta + Cheeks.Spacing</theta>
+                <z>Cheeks.Height - Cheeks.Puff</z>
+            </point>
+            <point type="cyl">
+                <r>ParabR(Jaw, Eyes.Eye_Angle.theta)</r>
+                <theta>Eyes.Eye_Angle.theta</theta>
+                <z>ParabZ(Jaw, Eyes.Eye_Angle.theta)</z>
+            </point>
+        </bezier>
+        <!-- cheekbone to eye -->
+        <bezier res="10" reflect="both">
+            <point type="cyl">
+                <r>Cheeks.Depth</r>
+                <theta>Eyes.Eye_Angle.theta + Cheeks.Spacing</theta>
+                <z>Cheeks.Height</z>
+            </point>
+            <point type="cyl">
+                <r>Cheeks.Depth</r>
+                <theta>Eyes.Eye_Angle.theta + Cheeks.Spacing</theta>
+                <z>Cheeks.Height + Cheeks.Puff/2</z>
+            </point>
+            <point type="cyl">
+                <r>(Eyes.Spacing^2 + Eyes.Depth^2)^.5 + Eyes.Size * cos(Eyes.Bottom)</r>
+                <theta>Eyes.Eye_Angle.theta + Cheeks.Spacing</theta>
+                <z>Eyes.Size * sin(Eyes.Bottom)</z>
             </point>
         </bezier>
     </section>

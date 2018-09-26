@@ -43,6 +43,10 @@ public class XMLModel
 
         parser.addPrefixOp("ParabR", 3);
         parser.addPrefixOp("ParabZ", 3);
+
+        parser.addPrefixOp("atan2", 3);
+
+        parser.addInfixOp("^", 4);
     }
 
     public XMLModel(ModelPane _mp)
@@ -767,6 +771,23 @@ public class XMLModel
         {
             return Math.sin(interpretVal(exp.getChild()));
         }
+        else if (op.equals("atan2"))
+        {
+            throw new BadValueException("Unsupported operation " + op);
+        }
+        else if (op.equals("^"))
+        {
+            if (exp.getNumChildren() == 2)
+            {
+                double base = interpretVal(exp.getChild(0));
+                double exponent = interpretVal(exp.getChild(1));
+                return Math.pow(base, exponent);
+            }
+            else
+            {
+                throw new BadValueException("Improper number of args to " + op);
+            }
+        }
         else if (op.equals("PI"))
         {
             return Math.PI;
@@ -874,13 +895,51 @@ public class XMLModel
                 throw new BadValueException("Improper number of args to " + op);
             }
         }
+        else if (op.equals("^"))
+        {
+            if (exp.getNumChildren() == 2)
+            {
+                DoubleProperty base = resolveProp(exp.getChild(0), context);
+                DoubleProperty exponent = resolveProp(exp.getChild(1), context);
+
+                Binder b = new PowerBinder(base, exponent);
+                binders.add(b);
+                return b.valueProperty();
+            }
+            else
+            {
+                throw new BadValueException("Improper number of args to " + op);
+            }
+        }
         else if (op.equals("cos"))
         {
-            throw new BadValueException("Unsupported operation " + op);
+            if (exp.getNumChildren() == 1)
+            {
+                DoubleProperty arg = resolveProp(exp.getChild(0), context);
+
+                Binder b = new CosBinder(arg);
+                binders.add(b);
+                return b.valueProperty();
+            }
+            else
+            {
+                throw new BadValueException("Improper number of args to " + op);
+            }
         }
         else if (op.equals("sin"))
         {
-            throw new BadValueException("Unsupported operation " + op);
+            if (exp.getNumChildren() == 1)
+            {
+                DoubleProperty arg = resolveProp(exp.getChild(0), context);
+
+                Binder b = new SinBinder(arg);
+                binders.add(b);
+                return b.valueProperty();
+            }
+            else
+            {
+                throw new BadValueException("Improper number of args to " + op);
+            }
         }
         else if (op.indexOf("Parab") == 0)
         {
@@ -894,14 +953,9 @@ public class XMLModel
                     String parabName = argsExp.getChild(0).getVal();
                     DoubleProperty theta = resolveProp(argsExp.getChild(1), context);
 
-                    System.out.println("Theta=" + theta.getValue());
-
                     if (!parabs.containsKey(parabName))
                         throw new BadValueException("Unrecognized parabola " + parabName);
                     ModelParab mp = parabs.get(parabName);
-
-                    System.out.println("R=" + mp.getRProp(theta).getValue());
-                    System.out.println("Z=" + mp.getZProp(theta).getValue());
                     
                     if (op.charAt(5) == 'R')
                         return mp.getRProp(theta);
@@ -909,6 +963,32 @@ public class XMLModel
                         return mp.getZProp(theta);
                     else
                         throw new BadValueException("Unrecognized parab function " + op);
+                }
+                else
+                {
+                    throw new BadValueException("Improper number of args to " + op);
+                }
+            }
+            else
+            {
+                throw new BadValueException("Improper number of args to " + op);
+            }
+        }
+        else if (op.equals("atan2"))
+        {
+            if (exp.getNumChildren() == 1)
+            {
+                ExpNode argsExp = exp.getChild();
+
+                if (argsExp.getVal().equals(",") &&
+                    argsExp.getNumChildren() == 2)
+                {
+                    DoubleProperty opp = resolveProp(argsExp.getChild(0), context);
+                    DoubleProperty adj = resolveProp(argsExp.getChild(1), context);
+
+                    Binder b = new AtanBinder(opp, adj);
+                    binders.add(b);
+                    return b.valueProperty();
                 }
                 else
                 {
